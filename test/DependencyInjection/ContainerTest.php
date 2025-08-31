@@ -6,6 +6,9 @@ use DateTime;
 use Idrinth\Quickly\Example1;
 use Idrinth\Quickly\Example2;
 use Idrinth\Quickly\Example3;
+use Idrinth\Quickly\Example3Interface;
+use Idrinth\Quickly\Example4;
+use Idrinth\Quickly\Example5;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -103,5 +106,31 @@ class ContainerTest extends TestCase
         $example3 = $container->get('ClassObject:'.Example3::class);
         self::assertInstanceOf(Example3::class, $example3);
         self::assertEquals('value', $example3->envExAmple);
+    }
+    #[Test]
+    public function canBuildExample5WithFactory(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], constructors: [
+            Example5::class => [
+                new Definitions\Factory(Example4::class, 'example4', 'abc', Example5::class),
+            ],
+        ], factories: [
+            Example4::class => Example3Interface::class,
+        ]);
+        self::assertTrue($container->has('Factory:'.Example4::class));
+        $example5 = $container->get('ClassObject:'.Example5::class);
+        self::assertInstanceOf(Example5::class, $example5);
+        self::assertInstanceOf(Example3::class, $example5->abc);
+    }
+    #[Test]
+    public function canBuildExample3InterfaceWithAlias(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], classAliases: [
+            Example3Interface::class => Example3::class,
+        ]);
+        self::assertFalse($container->has('Alias:'.Example3::class));
+        self::assertTrue($container->has('Alias:'.Example3Interface::class));
+        $example3 = $container->get('Alias:'.Example3Interface::class);
+        self::assertInstanceOf(Example3::class, $example3);
     }
 }

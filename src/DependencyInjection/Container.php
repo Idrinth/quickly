@@ -201,7 +201,7 @@ final class Container implements ContainerInterface
              * @var Definitions\Factory $definition
              * @var Factory $factory
              */
-            $factory = $this->get('ClassObject:'.$definition->getId());
+            $factory = $this->resolve(new ClassObject($definition->getId()));
             if (!($factory instanceof Factory)) {
                 throw new DependencyNotFound("Factory {$definition->getId()} is not a factory");
             }
