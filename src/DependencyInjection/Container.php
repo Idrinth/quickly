@@ -79,7 +79,7 @@ final class Container implements ContainerInterface
             if (!is_string($targetName) || empty($targetName)) {
                 throw new InvalidClassName('Target name must be a string');
             }
-            $this->classAliases[$prefix.':'.$className] = $targetName;
+            $newList[$prefix.':'.$className] = $targetName;
         }
         return $newList;
     }
@@ -88,6 +88,9 @@ final class Container implements ContainerInterface
     {
         if (isset($this->definitions[$id])) {
             return $this->definitions[$id];
+        }
+        if (isset($this->classAliases[$id])) {
+            return $this->toDefinition('ClassObject:'.$this->classAliases[$id]);
         }
         $parts = explode(':', $id);
         return match ($parts[0]) {

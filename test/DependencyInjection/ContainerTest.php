@@ -57,6 +57,13 @@ class ContainerTest extends TestCase
         $container->get('ClassObject:DateTimeMutable');
     }
     #[Test]
+    public function BuildsNoneExistingClassesWithAlias(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'truE'], classAliases: ['DateTimeMutable' => DateTime::class]);
+        self::assertTrue($container->has('Alias:DateTimeMutable'));
+        self::assertInstanceOf(DateTime::class, $container->get('Alias:DateTimeMutable'));
+    }
+    #[Test]
     public function failsToBuildUnresolvableDependencies(): void
     {
         $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true']);
