@@ -13,12 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - run: sudo sudo add-apt-repository ppa:apt-fast/stable -y && sudo apt-get update && sudo apt-get install apt-fast
     - uses: actions/checkout@v4
-    - name: Setup PHP environment
-      uses: nanasess/setup-php@v4.0.2
-      with:
-        php-version: 8.4
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
     - name: Cache Composer packages
@@ -35,6 +30,7 @@ jobs:
       uses: php-actions/phpunit@v4
       with:
         php_extensions: pcov
+        php_version: 8.4
         configuration: phpunit.xml
         coverage_text: true
           
