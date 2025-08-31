@@ -8,6 +8,7 @@ use Idrinth\Quickly\DependencyInjection\Definitions\Environment;
 use Idrinth\Quickly\Example1;
 use Idrinth\Quickly\Example10;
 use Idrinth\Quickly\Example11;
+use Idrinth\Quickly\Example12;
 use Idrinth\Quickly\Example2;
 use Idrinth\Quickly\Example3;
 use Idrinth\Quickly\Example3Interface;
@@ -184,21 +185,48 @@ class ContainerTest extends TestCase
     public function getUnknownIdThrowsDependencyNotFound(): void
     {
         $container = new Container([]);
-        $this->expectException(DependencyTypeUnknown::class);
+        $this->expectException(DependencyNotFound::class);
         $container->get('does-not-exist');
+    }
+    #[Test]
+    public function getUnknownTypeThrowsDependencyTypeUnknown(): void
+    {
+        $container = new Container([]);
+        $this->expectException(DependencyTypeUnknown::class);
+        $container->get('Type:does-not-exist');
     }
     #[Test]
     public function reflectionDisabledFallsBackToDefinitionsOnly(): void
     {
-        $c = new Container([]);
+        $container = new Container([]);
         $this->expectException(DependencyNotFound::class);
-        $c->get('ClassObject:\\Some\\Class\\That\\Isnt\\Defined');
+        $container->get('ClassObject:\\Some\\Class\\That\\Isnt\\Defined');
     }
     #[Test]
     public function exceptionsInConstructorAreWrapped(): void
     {
-        $c = new Container(['DI_USE_REFLECTION' => 'true']);
+        $container = new Container(['DI_USE_REFLECTION' => 'true']);
         $this->expectException(DependencyUnbuildable::class);
-        $c->get('ClassObject:'.Example10::class);
+        $container->get('ClassObject:'.Example10::class);
+    }
+    #[Test]
+    public function classesAreDefaultedTo(): void
+    {
+        $container = new Container(['DI_USE_REFLECTION' => 'true']);
+        self::assertFalse($container->has(Example1::class));
+        self::assertInstanceOf(Example1::class, $container->get(Example1::class));
+        self::assertTrue($container->has(Example1::class));
+    }
+    #[Test]
+    public function exceptionsAreWrappedInConfiguredMode(): void
+    {
+        $container = new Container([], constructors: [
+            Example12::class => [new ClassObject(Example1::class)],
+            Example1::class => [new ClassObject(DateTime::class)],
+            DateTime::class => [],
+        ]);
+        self::assertTrue($container->has(Example12::class));
+        $this->expectException(DependencyUnbuildable::class);
+        $container->get(Example12::class);
     }
 }

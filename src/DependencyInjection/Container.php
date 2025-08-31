@@ -93,6 +93,9 @@ final class Container implements ContainerInterface
             return $this->definitions[$id] = $this->toDefinition('ClassObject:'.$this->classAliases[$id]);
         }
         $parts = explode(':', $id);
+        if (count($parts) === 1) {
+            array_unshift($parts, 'ClassObject');
+        }
         return $this->definitions[$id] = match ($parts[0]) {
             'Environment' => new Environment($parts[1]),
             'Factory' => new Definitions\Factory($parts[1], $parts[2], $parts[3], $parts[4]),
@@ -244,8 +247,20 @@ final class Container implements ContainerInterface
 
     public function has(string $id): bool
     {
-        return isset($this->objects[$id]) || isset($this->constructors[$id])
-            || isset($this->environments[$id]) || isset($this->factories[$id])
-            || isset($this->classAliases[$id]);
+        $parts = explode(':', $id);
+        if (count($parts) === 1) {
+            array_unshift($parts, 'ClassObject');
+        }
+        if (isset($this->objects[implode(':', $parts)])) {
+            return true;
+        }
+        if ($parts[0] === 'Environment') {
+            return isset($this->environments[$id]);
+        }
+        if ($parts[0] === 'Factory') {
+            return isset($this->factories['Factory:'.$parts[1]]);
+        }
+        return isset($this->constructors['ClassObject:'.$parts[1]])
+            || isset($this->classAliases['Alias:'.$parts[1]]);
     }
 }
