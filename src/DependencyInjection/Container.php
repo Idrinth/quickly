@@ -165,14 +165,10 @@ final class Container implements ContainerInterface
                 throw new DependencyUnbuildable("$definition needs unsupported type {$type->getName()}");
             }
             if (isset($this->classAliases['Alias:' . $type->getName()])) {
-                $arguments[] = $this->get('ClassObject:' . $type->getName());
+                $arguments[] = $this->get('Alias:' . $type->getName());
                 continue;
             }
             if (!isset($this->constructors['ClassObject:' . $type->getName()])) {
-                if (isset($this->classAliases['Alias:' . $type->getName()])) {
-                    $arguments[] = $this->get('Alias:' . $type->getName());
-                    continue;
-                }
                 foreach ($parameter->getAttributes(ResolveWithFactory::class) as $attribute) {
                     $attribute = $attribute->newInstance();
                     $arguments[] = $this->resolve(new Definitions\Factory($attribute->class, $parameter->getName(), $attribute->key, $class));
