@@ -2,6 +2,7 @@
 
 namespace Idrinth\Quickly\DependencyInjection;
 
+use DateTime;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -28,7 +29,7 @@ class ContainerTest extends TestCase
     {
         $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'trUe']);
         self::assertFalse($container->has('ClassObject:DateTime'));
-        self::assertInstanceOf(\DateTime::class, $container->get('ClassObject:DateTime'));
+        self::assertInstanceOf(DateTime::class, $container->get('ClassObject:DateTime'));
     }
     #[Test]
     public function getsTheSameObjectEveryTime(): void
@@ -36,7 +37,7 @@ class ContainerTest extends TestCase
         $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'tRue']);
         self::assertFalse($container->has('ClassObject:DateTime'));
         $datetime = $container->get('ClassObject:DateTime');
-        self::assertInstanceOf(\DateTime::class, $datetime);
+        self::assertInstanceOf(DateTime::class, $datetime);
         self::assertSame($datetime, $container->get('ClassObject:DateTime'));
     }
     #[Test]
