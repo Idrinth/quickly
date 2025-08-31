@@ -119,14 +119,12 @@ final class Container implements ContainerInterface
             $attributes = $parameter->getAttributes(ResolveWithFactory::class);
             foreach ($attributes as $attribute) {
                 $attribute = $attribute->newInstance();
-                if (isset($this->factories[$attribute->class])) {
-                    $resolved = $this
-                        ->resolve(new ClassObject($this->factories[$attribute->class]))
-                        ->pickImplementation($parameter->getName(), $attribute->key, $class);
-                    if ($resolved) {
-                        return $resolved;
-                    }
-                }
+                $arguments[] = $this->resolve(new ClassObject(
+                    $this
+                        ->resolve(new ClassObject($attribute->class))
+                        ->pickImplementation($parameter->getName(), $attribute->key, $class),
+                ));
+                continue 2;
             }
             $type = $parameter->getType();
             if (!($type instanceof ReflectionNamedType)) {
@@ -194,7 +192,11 @@ final class Container implements ContainerInterface
             }
             $arguments[] = $this->get('ClassObject:' . $type->getName());
         }
-        return $this->objects["$definition"] = new $class(...$arguments);
+        try {
+            return $this->objects["$definition"] = new $class(...$arguments);
+        } catch (Exception $e) {
+            throw new DependencyUnbuildable("$class couldn't be build", previous: $e);
+        }
     }
     private function resolve(Definition $definition): object|string
     {

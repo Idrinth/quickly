@@ -3,7 +3,10 @@
 namespace Idrinth\Quickly\DependencyInjection;
 
 use DateTime;
+use Idrinth\Quickly\DependencyInjection\Definitions\ClassObject;
+use Idrinth\Quickly\DependencyInjection\Definitions\Environment;
 use Idrinth\Quickly\Example1;
+use Idrinth\Quickly\Example10;
 use Idrinth\Quickly\Example2;
 use Idrinth\Quickly\Example3;
 use Idrinth\Quickly\Example3Interface;
@@ -168,5 +171,26 @@ class ContainerTest extends TestCase
         self::assertFalse($container->has('ClassObject:'.Example9::class));
         $this->expectException(DependencyUnbuildable::class);
         $container->get('ClassObject:'.Example9::class);
+    }
+    #[Test]
+    public function getUnknownIdThrowsDependencyNotFound(): void
+    {
+        $container = new Container([]);
+        $this->expectException(DependencyTypeUnknown::class);
+        $container->get('does-not-exist');
+    }
+    #[Test]
+    public function reflectionDisabledFallsBackToDefinitionsOnly(): void
+    {
+        $c = new Container([]);
+        $this->expectException(DependencyNotFound::class);
+        $c->get('ClassObject:\\Some\\Class\\That\\Isnt\\Defined');
+    }
+    #[Test]
+    public function exceptionsInConstructorAreWrapped(): void
+    {
+        $c = new Container(['DI_USE_REFLECTION' => 'true']);
+        $this->expectException(DependencyUnbuildable::class);
+        $c->get('ClassObject:'.Example10::class);
     }
 }
