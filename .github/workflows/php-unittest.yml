@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - run: apt-get install apt-fast
+    - run: sudo apt-get install apt-fast
     - uses: actions/checkout@v4
     - name: Setup PHP environment
       uses: nanasess/setup-php@v4.0.2
