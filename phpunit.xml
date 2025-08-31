@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<phpunit executionOrder="depends,random" bootstrap="vendor/autoload.php" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd">
+    <testsuites>
+        <testsuite name="default">
+            <directory>test</directory>
+        </testsuite>
+    </testsuites>
+    <coverage pathCoverage="true"/>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+</phpunit>

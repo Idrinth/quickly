@@ -1,0 +1,28 @@
+{
+  "name": "idrinth/quickly-di",
+  "description": "description",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Björn 'Idrinth' Büttner"
+    }
+  ],
+  "require": {
+      "php": "^8.4",
+        "psr/container": "^2.0.2"
+  },
+  "require-dev": {
+      "phpunit/phpunit": "^12.3.7"
+  },
+  "autoload": {
+      "psr-4": {
+          "Idrinth\\Quickly\\": "src"
+      }
+  },
+  "autoload-dev": {
+      "psr-4": {
+          "Idrinth\\Quickly\\": "test"
+      }
+  }
+}
