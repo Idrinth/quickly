@@ -22,7 +22,7 @@
   },
   "autoload-dev": {
       "psr-4": {
-          "Idrinth\\Quickly\\": "test"
+          "Idrinth\\Quickly\\": ["test", "fixtures"]
       }
   }
 }

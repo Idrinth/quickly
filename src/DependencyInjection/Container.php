@@ -90,10 +90,10 @@ final class Container implements ContainerInterface
             return $this->definitions[$id];
         }
         if (isset($this->classAliases[$id])) {
-            return $this->toDefinition('ClassObject:'.$this->classAliases[$id]);
+            return $this->definitions[$id] = $this->toDefinition('ClassObject:'.$this->classAliases[$id]);
         }
         $parts = explode(':', $id);
-        return match ($parts[0]) {
+        return $this->definitions[$id] = match ($parts[0]) {
             'Environment' => new Environment($parts[1]),
             'Factory' => new Definitions\Factory($parts[1], $parts[2], $parts[3], $parts[4]),
             'ClassObject' => new ClassObject($parts[1]),

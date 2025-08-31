@@ -3,6 +3,9 @@
 namespace Idrinth\Quickly\DependencyInjection;
 
 use DateTime;
+use Idrinth\Quickly\Example1;
+use Idrinth\Quickly\Example2;
+use Idrinth\Quickly\Example3;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -70,5 +73,35 @@ class ContainerTest extends TestCase
         $this->expectException(DependencyUnbuildable::class);
         self::assertFalse($container->has('ClassObject:PDO'));
         $container->get('ClassObject:PDO');
+    }
+    #[Test]
+    public function canBuildExample1WithDependencies(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true']);
+        self::assertFalse($container->has('ClassObject:'.Example1::class));
+        $example1 = $container->get('ClassObject:'.Example1::class);
+        self::assertInstanceOf(Example1::class, $example1);
+        self::assertInstanceOf(DateTime::class, $example1->date);
+        self::assertEquals(0, $example1->time);
+    }
+    #[Test]
+    public function canBuildExample2WithDependencies(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true']);
+        self::assertFalse($container->has('ClassObject:'.Example2::class));
+        $example2 = $container->get('ClassObject:'.Example2::class);
+        self::assertInstanceOf(Example2::class, $example2);
+        self::assertInstanceOf(Example1::class, $example2->example1);
+        self::assertSame($example2->example11, $example2->example1);
+        self::assertNull($example2->a);
+    }
+    #[Test]
+    public function canBuildExample3WithDependencies(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true']);
+        self::assertFalse($container->has('ClassObject:'.Example3::class));
+        $example3 = $container->get('ClassObject:'.Example3::class);
+        self::assertInstanceOf(Example3::class, $example3);
+        self::assertEquals('value', $example3->envExAmple);
     }
 }
