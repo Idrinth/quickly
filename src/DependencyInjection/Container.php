@@ -129,7 +129,7 @@ final class Container implements ContainerInterface
                 }
             }
             $type = $parameter->getType();
-            if (!$type instanceof ReflectionNamedType) {
+            if (!($type instanceof ReflectionNamedType)) {
                 if ($parameter->isDefaultValueAvailable()) {
                     $arguments[] = $parameter->getDefaultValue();
                     continue;
@@ -137,11 +137,11 @@ final class Container implements ContainerInterface
                 if ($parameter->isOptional()) {
                     break;
                 }
-                throw new DependencyUnbuildable("Type of {$type} is not supported");
+                throw new DependencyUnresolvable("Type of {$parameter->getName()} is not supported");
             }
             if ($type->isBuiltin()) {
                 if ($type->getName() === 'string' && str_starts_with($parameter->getName(), 'env')) {
-                    $arguments[] = $this->get('Environment:' . lcfirst(substr($parameter->getName(), 3)));
+                    $arguments[] = $this->resolve(new Environment(lcfirst(substr($parameter->getName(), 3))));
                     continue;
                 }
                 $attributes = $parameter->getAttributes(EnvironmentInject::class);
@@ -149,7 +149,7 @@ final class Container implements ContainerInterface
                     $attribute = $attribute->newInstance();
                     $key = lcfirst(str_replace('_', '', ucwords(strtolower($attribute->environmentName), '_')));
                     if (isset($this->environments['Environment:' . $key])) {
-                        $arguments[] = $this->get('Environment:'.$key);
+                        $arguments[] = $this->resolve(new Environment($key));
                         continue 2;
                     }
                 }
@@ -171,6 +171,15 @@ final class Container implements ContainerInterface
                 continue;
             }
             if (!isset($this->constructors['ClassObject:' . $type->getName()])) {
+                if (isset($this->classAliases['Alias:' . $type->getName()])) {
+                    $arguments[] = $this->get('Alias:' . $type->getName());
+                    continue;
+                }
+                foreach ($parameter->getAttributes(ResolveWithFactory::class) as $attribute) {
+                    $attribute = $attribute->newInstance();
+                    $arguments[] = $this->resolve(new Definitions\Factory($attribute->class, $parameter->getName(), $attribute->key, $class));
+                    continue 2;
+                }
                 if ($parameter->isDefaultValueAvailable()) {
                     $arguments[] = $parameter->getDefaultValue();
                     continue;

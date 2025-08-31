@@ -9,6 +9,10 @@ use Idrinth\Quickly\Example3;
 use Idrinth\Quickly\Example3Interface;
 use Idrinth\Quickly\Example4;
 use Idrinth\Quickly\Example5;
+use Idrinth\Quickly\Example6;
+use Idrinth\Quickly\Example7;
+use Idrinth\Quickly\Example8;
+use Idrinth\Quickly\Example9;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -132,5 +136,37 @@ class ContainerTest extends TestCase
         self::assertTrue($container->has('Alias:'.Example3Interface::class));
         $example3 = $container->get('Alias:'.Example3Interface::class);
         self::assertInstanceOf(Example3::class, $example3);
+    }
+    #[Test]
+    public function canBuildExample6WithFactory(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true']);
+        self::assertFalse($container->has('ClassObject:'.Example6::class));
+        $example5 = $container->get('ClassObject:'.Example6::class);
+        self::assertInstanceOf(Example6::class, $example5);
+        self::assertInstanceOf(Example5::class, $example5->example5);
+    }
+    #[Test]
+    public function canNotBuildExample7WithMultipleOptions(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true']);
+        self::assertFalse($container->has('ClassObject:'.Example7::class));
+        $this->expectException(DependencyUnbuildable::class);
+        $container->get('ClassObject:'.Example7::class);
+    }
+    #[Test]
+    public function canBuildExample8WithMultipleButNullableOptions(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true']);
+        self::assertFalse($container->has('ClassObject:'.Example8::class));
+        self::assertInstanceOf(Example8::class, $container->get('ClassObject:'.Example8::class));
+    }
+    #[Test]
+    public function canNotInjectIntegersFromEnvironmentInExample9(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true']);
+        self::assertFalse($container->has('ClassObject:'.Example9::class));
+        $this->expectException(DependencyUnbuildable::class);
+        $container->get('ClassObject:'.Example9::class);
     }
 }
