@@ -25,7 +25,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-php-
     - name: Install dependencies
-      run: composer install --prefer-dist --no-progress --ignore-platform-req
+      run: composer install --prefer-dist --no-progress --ignore-platform-req php
     - name: PHPUnit (php-actions)
       uses: php-actions/phpunit@v4
       with:
