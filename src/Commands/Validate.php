@@ -2,7 +2,7 @@
 
 namespace Idrinth\Quickly\Commands;
 
-class LockDependencies
+class Validate
 {
 
 }
