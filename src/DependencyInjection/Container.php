@@ -146,10 +146,8 @@ final class Container implements ContainerInterface
                 foreach ($attributes as $attribute) {
                     $attribute = $attribute->newInstance();
                     $key = lcfirst(str_replace('_', '', ucwords(strtolower($attribute->environmentName), '_')));
-                    if (isset($this->environments['Environment:' . $key])) {
-                        $arguments[] = $this->resolve(new Environment($key));
-                        continue 2;
-                    }
+                    $arguments[] = $this->resolve(new Environment($key));
+                    continue 2;
                 }
                 if ($parameter->isDefaultValueAvailable()) {
                     $arguments[] = $parameter->getDefaultValue();

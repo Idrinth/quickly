@@ -7,6 +7,7 @@ use Idrinth\Quickly\DependencyInjection\Definitions\ClassObject;
 use Idrinth\Quickly\DependencyInjection\Definitions\Environment;
 use Idrinth\Quickly\Example1;
 use Idrinth\Quickly\Example10;
+use Idrinth\Quickly\Example11;
 use Idrinth\Quickly\Example2;
 use Idrinth\Quickly\Example3;
 use Idrinth\Quickly\Example3Interface;
@@ -169,8 +170,15 @@ class ContainerTest extends TestCase
     {
         $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true']);
         self::assertFalse($container->has('ClassObject:'.Example9::class));
-        $this->expectException(DependencyUnbuildable::class);
+        $this->expectException(DependencyNotFound::class);
         $container->get('ClassObject:'.Example9::class);
+    }
+    #[Test]
+    public function canInjectStringFromEnvironmentInExample11(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true']);
+        self::assertFalse($container->has('ClassObject:'.Example11::class));
+        self::assertInstanceOf(Example11::class, $container->get('ClassObject:'.Example11::class));
     }
     #[Test]
     public function getUnknownIdThrowsDependencyNotFound(): void
