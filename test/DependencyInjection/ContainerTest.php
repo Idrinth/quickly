@@ -10,6 +10,8 @@ use Idrinth\Quickly\Example10;
 use Idrinth\Quickly\Example11;
 use Idrinth\Quickly\Example12;
 use Idrinth\Quickly\Example13;
+use Idrinth\Quickly\Example14;
+use Idrinth\Quickly\Example15;
 use Idrinth\Quickly\Example2;
 use Idrinth\Quickly\Example3;
 use Idrinth\Quickly\Example3Interface;
@@ -285,5 +287,25 @@ class ContainerTest extends TestCase
         $container = new Container(['DI_USE_REFLECTION' => 'true']);
         self::assertFalse($container->has(Example13::class));
         self::assertInstanceOf(Example13::class, $container->get(Example13::class));
+    }
+    #[Test]
+    public function resolvingLazyWorksEvenOutsideReflection(): void
+    {
+        $container = new Container([], constructors: [
+            Example14::class => [new ClassObject(Example10::class, true)],
+            Example10::class => [],
+        ]);
+        self::assertTrue($container->has(Example14::class));
+        self::assertTrue($container->has(Example10::class));
+        self::assertInstanceOf(Example14::class, $container->get(Example14::class));
+    }
+    #[Test]
+    public function reflectionExceptionsAreCaughtAndWrapped(): void
+    {
+        $container = new Container(['DI_USE_REFLECTION' => 'true', 'EX_AMPLE' => '---']);
+        self::assertInstanceOf(
+            Example3::class,
+            $container->get('Factory:'.Example4::class.':test:param:'.Example5::class)
+        );
     }
 }

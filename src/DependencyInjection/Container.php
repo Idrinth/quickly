@@ -159,16 +159,7 @@ final class Container implements ContainerInterface
                 }
                 throw new DependencyUnbuildable("$definition needs unsupported type {$type->getName()}");
             }
-            if (isset($this->classAliases['Alias:' . $type->getName()])) {
-                $arguments[] = $this->get('Alias:' . $type->getName());
-                continue;
-            }
             if (!isset($this->constructors['ClassObject:' . $type->getName()])) {
-                foreach ($parameter->getAttributes(ResolveWithFactory::class) as $attribute) {
-                    $attribute = $attribute->newInstance();
-                    $arguments[] = $this->resolve(new Definitions\Factory($attribute->class, $parameter->getName(), $attribute->key, $class));
-                    continue 2;
-                }
                 if ($parameter->isDefaultValueAvailable()) {
                     $arguments[] = $parameter->getDefaultValue();
                     continue;
@@ -211,11 +202,7 @@ final class Container implements ContainerInterface
 
         if (!isset($this->constructors["$definition"])) {
             if ($this->useReflection && class_exists($class)) {
-                try {
-                    return $this->resolveWithReflection($definition);
-                } catch (ReflectionException $e) {
-                    throw new DependencyUnbuildable("Reflection on definition {$definition->getId()} failed");
-                }
+                return $this->resolveWithReflection($definition);
             }
             throw new DependencyNotFound("$class is unknown");
         }
