@@ -11,7 +11,6 @@ $output = new Colorless();
 
 $command = match ($argv[1] ?? null) {
     'build' => new Build($output),
-    'init' => new Init($output),
     'validate' => new Validate($output),
     default => new Help($output),
 };

@@ -12,6 +12,7 @@ use Idrinth\Quickly\Example12;
 use Idrinth\Quickly\Example13;
 use Idrinth\Quickly\Example14;
 use Idrinth\Quickly\Example15;
+use Idrinth\Quickly\Example16;
 use Idrinth\Quickly\Example2;
 use Idrinth\Quickly\Example3;
 use Idrinth\Quickly\Example3Interface;
@@ -307,5 +308,12 @@ class ContainerTest extends TestCase
             Example3::class,
             $container->get('Factory:'.Example4::class.':test:param:'.Example5::class)
         );
+    }
+    #[Test]
+    public function circularDependenciesCantBeBuild(): void
+    {
+        $container = new Container(['DI_USE_REFLECTION' => 'true']);
+        $this->expectException(CircularDependency::class);
+        $container->get(Example16::class);
     }
 }

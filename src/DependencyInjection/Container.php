@@ -106,10 +106,11 @@ final class Container implements ContainerInterface
 
     /**
      * @param Definition $definition
+     * @param string[] $previous previous initialization attempts to detect loops
      * @return object
      * @throws ReflectionException
      */
-    private function resolveWithReflection(Definition $definition): object
+    private function resolveWithReflection(Definition $definition, string ...$previous): object
     {
         $class = $definition->getId();
         $reflection = new ReflectionClass($class);
@@ -124,7 +125,7 @@ final class Container implements ContainerInterface
                 $attribute = $attribute->newInstance();
                 $arguments[] = $this->resolve(new ClassObject(
                     $this
-                        ->resolve(new ClassObject($attribute->class))
+                        ->resolve(new ClassObject($attribute->class), ...$previous)
                         ->pickImplementation($parameter->getName(), $attribute->key, $class),
                 ));
                 continue 2;
@@ -139,14 +140,14 @@ final class Container implements ContainerInterface
             }
             if ($type->isBuiltin()) {
                 if ($type->getName() === 'string' && str_starts_with($parameter->getName(), 'env')) {
-                    $arguments[] = $this->resolve(new Environment(lcfirst(substr($parameter->getName(), 3))));
+                    $arguments[] = $this->resolve(new Environment(lcfirst(substr($parameter->getName(), 3))), ...[...$previous, "$definition"]);
                     continue;
                 }
                 $attributes = $parameter->getAttributes(EnvironmentInject::class);
                 foreach ($attributes as $attribute) {
                     $attribute = $attribute->newInstance();
                     $key = lcfirst(str_replace('_', '', ucwords(strtolower($attribute->environmentName), '_')));
-                    $arguments[] = $this->resolve(new Environment($key));
+                    $arguments[] = $this->resolve(new Environment($key), ...[...$previous, "$definition"]);
                     continue 2;
                 }
                 if ($parameter->isDefaultValueAvailable()) {
@@ -169,7 +170,7 @@ final class Container implements ContainerInterface
                     continue;
                 }
             }
-            $arguments[] = $this->get('ClassObject:' . $type->getName());
+            $arguments[] = $this->resolve(new ClassObject($type->getName()), ...[...$previous, "$definition"]);
         }
         try {
             return $this->objects["$definition"] = new $class(...$arguments);
@@ -177,8 +178,11 @@ final class Container implements ContainerInterface
             throw new DependencyUnbuildable("$class couldn't be build", previous: $e);
         }
     }
-    private function resolve(Definition $definition): object|string
+    private function resolve(Definition $definition, string ...$previous): object|string
     {
+        if (in_array("$definition", $previous)) {
+            throw new CircularDependency(implode('->', $previous).'->'.$definition);
+        }
         if ($definition->getType() === DefinitionTypes::Environment) {
             return $this->environments["$definition"]
                 ?? throw new DependencyNotFound("Environment {$definition->getId()} could not be found");
@@ -191,26 +195,36 @@ final class Container implements ContainerInterface
              * @var Definitions\Factory $definition
              * @var Factory $factory
              */
-            $factory = $this->resolve(new ClassObject($definition->getId()));
+            $factory = $this->resolve(new ClassObject($definition->getId()), ...$previous);
             if (!($factory instanceof Factory)) {
                 throw new DependencyNotFound("Factory {$definition->getId()} is not a factory");
             }
             $implementation = $factory->pickImplementation($definition->getParameter(), $definition->getKey(), $definition->getForClass());
-            return $this->objects["$definition"] = $this->resolve(new ClassObject($implementation, $definition->isLazy()));
+            return $this->objects["$definition"] = $this->resolve(new ClassObject($implementation, $definition->isLazy()), ...[...$previous, "$definition"]);
         }
         $class = $definition->getId();
 
         if (!isset($this->constructors["$definition"])) {
             if ($this->useReflection && class_exists($class)) {
-                return $this->resolveWithReflection($definition);
+                return $this->resolveWithReflection($definition, ...[...$previous, "$definition"]);
             }
             throw new DependencyNotFound("$class is unknown");
         }
         try {
             if ($definition->isLazy()) {
-                return $this->objects["$definition"] = new ReflectionClass($class)->newLazyGhost(fn() => new $class(...array_map([$this, 'resolve'], $this->constructors["$definition"])));
+                return $this->objects["$definition"] = new ReflectionClass($class)->newLazyGhost(fn() => new $class(
+                    ...array_map(
+                        fn(Definition $definition) => $this->resolve($definition, ...$previous),
+                        $this->constructors["$definition"]
+                    )
+                ));
             }
-            return $this->objects["$definition"] = new $class(...array_map([$this, 'resolve'], $this->constructors["$definition"]));
+            return $this->objects["$definition"] = new $class(
+                ...array_map(
+                    fn(Definition $definition) => $this->resolve($definition, ...$previous),
+                    $this->constructors["$definition"]
+                )
+            );
         } catch (Exception $e) {
             throw new DependencyUnbuildable("$class can't be built.", previous: $e);
         }
