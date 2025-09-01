@@ -7,7 +7,7 @@ use Idrinth\Quickly\DependencyInjection\DefinitionTypes;
 
 final readonly class Factory implements Definition
 {
-    public function __construct(private string $id, private string $parameter, private string $key, private string $forClass, private bool $isLazy = true)
+    public function __construct(private string $id, private string $parameter, private string $key, private string $forClass, private bool $isLazy = false)
     {
     }
     public function getType(): DefinitionTypes
