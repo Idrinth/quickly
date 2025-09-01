@@ -13,9 +13,10 @@ class EnvironmentTest extends TestCase
     #[Test]
     public function canBuild(): void
     {
-        $classObject = new Environment('someIdHere');
-        self::assertSame(DefinitionTypes::Environment, $classObject->getType());
-        self::assertSame('someIdHere', $classObject->getId());
-        self::assertSame('Environment:someIdHere', (string) $classObject);
+        $environment = new Environment('someIdHere');
+        self::assertSame(DefinitionTypes::Environment, $environment->getType());
+        self::assertSame('someIdHere', $environment->getId());
+        self::assertSame('Environment:someIdHere', (string) $environment);
+        self::assertFalse($environment->isLazy());
     }
 }

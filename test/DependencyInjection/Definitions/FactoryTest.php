@@ -13,12 +13,13 @@ class FactoryTest extends TestCase
     #[Test]
     public function canBuild(): void
     {
-        $classObject = new Factory('someIdHere', 'parameterName', 'key', 'className');
-        self::assertSame(DefinitionTypes::Factory, $classObject->getType());
-        self::assertSame('someIdHere', $classObject->getId());
-        self::assertSame('parameterName', $classObject->getParameter());
-        self::assertSame('key', $classObject->getKey());
-        self::assertSame('className', $classObject->getForClass());
-        self::assertSame('Factory:someIdHere:parameterName:key:className', (string) $classObject);
+        $factory = new Factory('someIdHere', 'parameterName', 'key', 'className');
+        self::assertSame(DefinitionTypes::Factory, $factory->getType());
+        self::assertSame('someIdHere', $factory->getId());
+        self::assertSame('parameterName', $factory->getParameter());
+        self::assertSame('key', $factory->getKey());
+        self::assertSame('className', $factory->getForClass());
+        self::assertSame('Factory:someIdHere:parameterName:key:className', (string) $factory);
+        self::assertTrue($factory->isLazy());
     }
 }

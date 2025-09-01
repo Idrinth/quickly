@@ -17,5 +17,7 @@ class ClassObjectTest extends TestCase
         self::assertSame(DefinitionTypes::ClassObject, $classObject->getType());
         self::assertSame('someIdHere', $classObject->getId());
         self::assertSame('ClassObject:someIdHere', (string) $classObject);
+        self::assertFalse($classObject->isLazy());
+        self::assertFalse($classObject->isLazy());
     }
 }

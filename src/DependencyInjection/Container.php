@@ -214,7 +214,7 @@ final class Container implements ContainerInterface
                 throw new DependencyNotFound("Factory {$definition->getId()} is not a factory");
             }
             $implementation = $factory->pickImplementation($definition->getParameter(), $definition->getKey(), $definition->getForClass());
-            return $this->objects["$definition"] = $this->get('ClassObject:'.$implementation);
+            return $this->objects["$definition"] = $this->resolve(new ClassObject($implementation, $definition->isLazy()));
         }
         $class = $definition->getId();
 
@@ -229,6 +229,9 @@ final class Container implements ContainerInterface
             throw new DependencyNotFound("$class is unknown");
         }
         try {
+            if ($definition->isLazy()) {
+                return $this->objects["$definition"] = new ReflectionClass($class)->newLazyGhost(fn() => new $class(...array_map([$this, 'resolve'], $this->constructors["$definition"])));
+            }
             return $this->objects["$definition"] = new $class(...array_map([$this, 'resolve'], $this->constructors["$definition"]));
         } catch (Exception $e) {
             throw new DependencyUnbuildable("$class can't be built.", previous: $e);

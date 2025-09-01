@@ -23,4 +23,9 @@ final readonly class Environment implements Definition
     {
         return "Environment:{$this->id}";
     }
+
+    public function isLazy(): bool
+    {
+        return false;
+    }
 }

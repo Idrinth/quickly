@@ -8,4 +8,5 @@ interface Definition extends Stringable
 {
     public function getType(): DefinitionTypes;
     public function getId(): string;
+    public function isLazy(): bool;
 }

@@ -2,10 +2,12 @@
 
 namespace Idrinth\Quickly;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 
+#[CoversClass(EnvironmentFactory::class)]
 class EnvironmentFactoryTest extends TestCase
 {
     #[Test]

@@ -21,6 +21,7 @@ use Idrinth\Quickly\Example9;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 #[CoversClass(Container::class)]
 class ContainerTest extends TestCase
@@ -37,7 +38,7 @@ class ContainerTest extends TestCase
     {
         $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'True']);
         self::assertFalse($container->has('ClassObject:stdClass'));
-        self::assertInstanceOf(\stdClass::class, $container->get('ClassObject:stdClass'));
+        self::assertInstanceOf(stdClass::class, $container->get('ClassObject:stdClass'));
     }
     #[Test]
     public function canGetClassWithOptionalDependencies(): void
@@ -130,6 +131,54 @@ class ContainerTest extends TestCase
         $example5 = $container->get('ClassObject:'.Example5::class);
         self::assertInstanceOf(Example5::class, $example5);
         self::assertInstanceOf(Example3::class, $example5->abc);
+    }
+    #[Test]
+    public function canNotBuildExample5WithNoneFactory(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], constructors: [
+            Example5::class => [
+                new Definitions\Factory(Example1::class, 'example4', 'abc', Example5::class),
+            ],
+        ], factories: [
+            Example1::class => Example3Interface::class,
+        ]);
+        self::assertTrue($container->has('Factory:'.Example1::class));
+        $this->expectException(DependencyUnbuildable::class);
+        $container->get('ClassObject:'.Example5::class);
+    }
+    #[Test]
+    public function canNotRegisterNonDefinition(): void
+    {
+        $this->expectException(InvalidDependency::class);
+        new Container([], constructors: [
+            Example5::class => [
+                new stdClass(),
+            ],
+        ]);
+    }
+    #[Test]
+    public function canNotRegisterNamelessClassAsConstructor(): void
+    {
+        $this->expectException(InvalidClassName::class);
+        new Container([], constructors: [
+            '' => [],
+        ]);
+    }
+    #[Test]
+    public function canNotRegisterNamelessClassAsFactory(): void
+    {
+        $this->expectException(InvalidClassName::class);
+        new Container([], factories: [
+            '' => 'B',
+        ]);
+    }
+    #[Test]
+    public function canNotRegisterNamelessClassAsFactoryTarget(): void
+    {
+        $this->expectException(InvalidClassName::class);
+        new Container([], factories: [
+            'A' => '',
+        ]);
     }
     #[Test]
     public function canBuildExample3InterfaceWithAlias(): void

@@ -7,7 +7,7 @@ use Idrinth\Quickly\DependencyInjection\DefinitionTypes;
 
 final readonly class Factory implements Definition
 {
-    public function __construct(private string $id, private string $parameter, private string $key, private string $forClass)
+    public function __construct(private string $id, private string $parameter, private string $key, private string $forClass, private bool $isLazy = true)
     {
     }
     public function getType(): DefinitionTypes
@@ -38,5 +38,10 @@ final readonly class Factory implements Definition
     public function __toString(): string
     {
         return "Factory:{$this->id}:{$this->parameter}:{$this->key}:{$this->forClass}";
+    }
+
+    public function isLazy(): bool
+    {
+        return $this->isLazy;
     }
 }
