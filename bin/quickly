@@ -1,14 +1,18 @@
-#!php
+#!/usr/bin/env php
 <?php
 
 namespace Idrinth\Quickly\Commands;
 
+use Idrinth\Quickly\CommandLineOutputs\Colorless;
+
 require dirname(__DIR__) . '/vendor/autoload.php';
 
+$output = new Colorless();
+
 $command = match ($argv[1] ?? null) {
-    'build' => new Build(),
-    'init' => new Init(),
-    'validate' => new Validate(),
-    default => new Help(),
+    'build' => new Build($output),
+    'init' => new Init($output),
+    'validate' => new Validate($output),
+    default => new Help($output),
 };
 exit($command->run());

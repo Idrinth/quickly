@@ -2,6 +2,7 @@
 
 namespace Idrinth\Quickly\Commands;
 
+use Idrinth\Quickly\CommandLineOutput;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -12,7 +13,10 @@ class HelpTest extends TestCase
     #[Test]
     public function canRun(): void
     {
-        $command = new Help();
+        $output = $this->createMock(CommandLineOutput::class);
+        $output->expects(self::exactly(6))
+            ->method('infoLine');
+        $command = new Help($output);
         self::assertEquals(0, $command->run());
     }
 }
