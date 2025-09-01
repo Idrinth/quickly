@@ -20,6 +20,6 @@ class FactoryTest extends TestCase
         self::assertSame('key', $factory->getKey());
         self::assertSame('className', $factory->getForClass());
         self::assertSame('Factory:someIdHere:parameterName:key:className', (string) $factory);
-        self::assertTrue($factory->isLazy());
+        self::assertFalse($factory->isLazy());
     }
 }
