@@ -135,9 +135,6 @@ final class Container implements ContainerInterface
                     $arguments[] = $parameter->getDefaultValue();
                     continue;
                 }
-                if ($parameter->isOptional()) {
-                    break;
-                }
                 throw new DependencyUnresolvable("Type of {$parameter->getName()} is not supported");
             }
             if ($type->isBuiltin()) {
@@ -160,9 +157,6 @@ final class Container implements ContainerInterface
                     $arguments[] = null;
                     continue;
                 }
-                if ($parameter->isOptional()) {
-                    break;
-                }
                 throw new DependencyUnbuildable("$definition needs unsupported type {$type->getName()}");
             }
             if (isset($this->classAliases['Alias:' . $type->getName()])) {
@@ -182,9 +176,6 @@ final class Container implements ContainerInterface
                 if ($type->allowsNull()) {
                     $arguments[] = null;
                     continue;
-                }
-                if ($parameter->isOptional()) {
-                    break;
                 }
             }
             $arguments[] = $this->get('ClassObject:' . $type->getName());

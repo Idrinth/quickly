@@ -9,6 +9,7 @@ use Idrinth\Quickly\Example1;
 use Idrinth\Quickly\Example10;
 use Idrinth\Quickly\Example11;
 use Idrinth\Quickly\Example12;
+use Idrinth\Quickly\Example13;
 use Idrinth\Quickly\Example2;
 use Idrinth\Quickly\Example3;
 use Idrinth\Quickly\Example3Interface;
@@ -277,5 +278,12 @@ class ContainerTest extends TestCase
         self::assertTrue($container->has(Example12::class));
         $this->expectException(DependencyUnbuildable::class);
         $container->get(Example12::class);
+    }
+    #[Test]
+    public function nullableIsUsedWhenNoValueIsAvailable(): void
+    {
+        $container = new Container(['DI_USE_REFLECTION' => 'true']);
+        self::assertFalse($container->has(Example13::class));
+        self::assertInstanceOf(Example13::class, $container->get(Example13::class));
     }
 }
