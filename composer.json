@@ -5,7 +5,8 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Björn 'Idrinth' Büttner"
+            "name": "Björn 'Idrinth' Büttner",
+            "homepage": "https://github.com/idrinth"
         }
     ],
     "keywords": [
@@ -33,5 +34,8 @@
         "psr-4": {
             "Idrinth\\Quickly\\": ["test", "fixtures"]
         }
+    },
+    "config": {
+        "optimize-autoloader": true
     }
 }

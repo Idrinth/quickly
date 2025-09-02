@@ -99,10 +99,9 @@ class ServiceConsumer
 ```php
 use Idrinth\Quickly\DependencyInjection\LazyInitialization;
 
+#[LazyInitialization]
 class ExpensiveService
 {
-    #[LazyInitialization]
-    public HeavyDependency $heavyDep;
 }
 ```
 
