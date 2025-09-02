@@ -44,7 +44,8 @@ for ($j = 0; $j < 10; $j++) {
     $start = microtime(true);
     for($i = 0; $i < 100000; $i++) {
         $devContainer = new \Idrinth\Quickly\DependencyInjection\Container(['DI_USE_REFLECTION' => 'true']);
-        $devContainer->get(stdClass::class);
+        $intendedObject = $devContainer->get(stdClass::class);
+        unset($intendedObject);
     }
     $time = microtime(true) - $start;
     $times['simple-reflected'][] = $time;
@@ -55,17 +56,20 @@ for ($j = 0; $j < 10; $j++) {
         $prodContainer = new \Idrinth\Quickly\DependencyInjection\Container([], constructors: [
             stdClass::class => [],
         ]);
-        $prodContainer->get(stdClass::class);
+        $intendedObject = $devContainer->get(stdClass::class);
+        unset($intendedObject);
     }
     $time = microtime(true) - $start;
     $times['simple-configured'][] = $time;
+    echo "Duration: ".$time." seconds per 100,000\n";
     echo "Starting with configured+unvalidated (simple)\n";
     $start = microtime(true);
     for($i = 0; $i < 100000; $i++) {
         $prodContainer = new \Idrinth\Quickly\DependencyInjection\Container(['DI_USE_CONFIG_VALIDATION' => 'false'], constructors: [
             stdClass::class => [],
         ]);
-        $prodContainer->get(stdClass::class);
+        $intendedObject = $devContainer->get(stdClass::class);
+        unset($intendedObject);
     }
     $time = microtime(true) - $start;
     $times['simple-configured-unvalidated'][] = $time;
@@ -74,10 +78,12 @@ for ($j = 0; $j < 10; $j++) {
     $prodContainer = new \Idrinth\Quickly\DependencyInjection\Container([], constructors: [
         stdClass::class => [],
     ]);
-    $prodContainer->get(stdClass::class);
+    $intendedObject = $devContainer->get(stdClass::class);
+    unset($intendedObject);
     $start = microtime(true);
     for($i = 0; $i < 100000; $i++) {
-        $prodContainer->get(stdClass::class);
+        $intendedObject = $devContainer->get(stdClass::class);
+        unset($intendedObject);
     }
     $time = microtime(true) - $start;
     $times['simple-configured-cached'][] = $time;
@@ -86,7 +92,8 @@ for ($j = 0; $j < 10; $j++) {
     $start = microtime(true);
     for($i = 0; $i < 100000; $i++) {
         $devContainer = new \Idrinth\Quickly\DependencyInjection\Container(['DI_USE_REFLECTION' => 'true']);
-        $devContainer->get(F::class);
+        $intendedObject = $devContainer->get(F::class);
+        unset($intendedObject);
     }
     $time = microtime(true) - $start;
     $times['medium-reflected'][] = $time;
@@ -118,7 +125,8 @@ for ($j = 0; $j < 10; $j++) {
             ],
             A::class => [],
         ]);
-        $prodContainer->get(F::class);
+        $intendedObject = $devContainer->get(F::class);
+        unset($intendedObject);
     }
     $time = microtime(true) - $start;
     $times['medium-configured'][] = $time;
@@ -150,7 +158,8 @@ for ($j = 0; $j < 10; $j++) {
             ],
             A::class => [],
         ]);
-        $prodContainer->get(F::class);
+        $intendedObject = $devContainer->get(F::class);
+        unset($intendedObject);
     }
     $time = microtime(true) - $start;
     $times['medium-configured-unvalidated'][] = $time;
@@ -180,10 +189,12 @@ for ($j = 0; $j < 10; $j++) {
         ],
         A::class => [],
     ]);
-    $prodContainer->get(F::class);
+    $intendedObject = $devContainer->get(F::class);
+    unset($intendedObject);
     $start = microtime(true);
     for($i = 0; $i < 100000; $i++) {
-        $prodContainer->get(F::class);
+        $intendedObject = $devContainer->get(F::class);
+        unset($intendedObject);
     }
     $time = microtime(true) - $start;
     $times['medium-configured-cached'][] = $time;

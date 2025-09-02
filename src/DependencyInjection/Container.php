@@ -69,10 +69,10 @@ final class Container implements ContainerInterface
             }
             $this->constructors['ClassObject:'.$className] = $dependencies;
         }
-        $this->factories = $this->mapKeys('Factory', $factories);
-        $this->classAliases = $this->mapKeys('Alias', $classAliases);
+        $this->factories = $this->mapKeys('Factory', $factories, $disableValidation);
+        $this->classAliases = $this->mapKeys('Alias', $classAliases, $disableValidation);
     }
-    private function mapKeys(string $prefix, array $list, bool $disableValidation = false): array
+    private function mapKeys(string $prefix, array $list, bool $disableValidation): array
     {
         $newList = [];
         foreach ($list as $className => $targetName) {
