@@ -53,15 +53,18 @@ final class Container implements ContainerInterface
             $this->environments['Environment:' . $key] = $value;
         }
         $this->useReflection = isset($environments['DI_USE_REFLECTION']) && strtolower($environments['DI_USE_REFLECTION']) === 'true';
+        $disableValidation = isset($environments['DI_USE_CONFIG_VALIDATION']) && strtolower($environments['DI_USE_CONFIG_VALIDATION']) === 'false';
         $this->objects = [];
         $this->constructors = [];
         foreach ($constructors as $className => $dependencies) {
-            if (!is_string($className) || empty($className)) {
-                throw new InvalidClassName('Class name must be a string');
-            }
-            foreach ($dependencies as $dependency) {
-                if (!($dependency instanceof Definition)) {
-                    throw new InvalidDependency("Received an invalid dependency in the constructor argument of $className");
+            if (!$disableValidation) {
+                if (!is_string($className) || empty($className)) {
+                    throw new InvalidClassName('Class name must be a string');
+                }
+                foreach ($dependencies as $dependency) {
+                    if (!($dependency instanceof Definition)) {
+                        throw new InvalidDependency("Received an invalid dependency in the constructor argument of $className");
+                    }
                 }
             }
             $this->constructors['ClassObject:'.$className] = $dependencies;
@@ -69,15 +72,17 @@ final class Container implements ContainerInterface
         $this->factories = $this->mapKeys('Factory', $factories);
         $this->classAliases = $this->mapKeys('Alias', $classAliases);
     }
-    private function mapKeys(string $prefix, array $list): array
+    private function mapKeys(string $prefix, array $list, bool $disableValidation = false): array
     {
         $newList = [];
         foreach ($list as $className => $targetName) {
-            if (!is_string($className) || empty($className)) {
-                throw new InvalidClassName('Class name must be a string');
-            }
-            if (!is_string($targetName) || empty($targetName)) {
-                throw new InvalidClassName('Target name must be a string');
+            if (!$disableValidation) {
+                if (!is_string($className) || empty($className)) {
+                    throw new InvalidClassName('Class name must be a string');
+                }
+                if (!is_string($targetName) || empty($targetName)) {
+                    throw new InvalidClassName('Target name must be a string');
+                }
             }
             $newList[$prefix.':'.$className] = $targetName;
         }
