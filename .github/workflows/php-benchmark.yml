@@ -24,7 +24,7 @@ jobs:
                   key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
                   restore-keys: ${{ runner.os }}-php-
             - name: Install PHP 8.4
-              run: sudo apt-add-repository ppa:ondrej/php -y && sudo apt-get install -y -q php8.4 php8.4-curl
+              run: sudo apt-add-repository ppa:ondrej/php -y && sudo apt-get install -y -q php8.4 php8.4-curl php8.4 php8.4-dom php8.4 php8.4-mbstring
             - name: Install dependencies
               run: composer install --prefer-dist --no-progress
             - name: Script (php-actions)
