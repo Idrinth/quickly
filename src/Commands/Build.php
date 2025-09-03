@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace Idrinth\Quickly\Commands;
 
@@ -11,8 +11,6 @@ use Idrinth\Quickly\DependencyInjection\Definition;
 use Idrinth\Quickly\DependencyInjection\Definitions\ClassObject;
 use Idrinth\Quickly\DependencyInjection\Definitions\Environment;
 use Idrinth\Quickly\DependencyInjection\Definitions\StaticValue;
-use Idrinth\Quickly\DependencyInjection\DependencyTypeUnknown;
-use Idrinth\Quickly\DependencyInjection\DependencyUnbuildable;
 use Idrinth\Quickly\DependencyInjection\DependencyUnresolvable;
 use Idrinth\Quickly\DependencyInjection\EnvironmentInject;
 use Idrinth\Quickly\DependencyInjection\LazyInitialization;
@@ -49,9 +47,9 @@ final class Build implements Command
             try {
                 if (!isset($this->reflectedClasses[$class])) {
                     $reflection = new ReflectionClass($class);
-                    //foreach($reflection->getAttributes(DependencyInjectionEntrypoint::class) as $attribute) {
+                    foreach($reflection->getAttributes(DependencyInjectionEntrypoint::class) as $attribute) {
                         $this->buildDependencyDefinition($class);
-                    //}
+                    }
                 }
             } catch (Exception $e) {
                 $this->output->errorLine($e->getMessage());
