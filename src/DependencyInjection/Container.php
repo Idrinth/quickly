@@ -144,7 +144,7 @@ final class Container implements ContainerInterface
                 throw new DependencyUnresolvable("Type of {$parameter->getName()} is not supported");
             }
             if ($type->isBuiltin()) {
-                if ($type->getName() === 'string' && str_starts_with($parameter->getName(), 'env')) {
+                if ($type->getName() === 'string' && str_starts_with($parameter->getName(), 'env') && strtoupper($parameter->getName()[3]) === $parameter->getName()[3]) {
                     $arguments[] = $this->resolve(new Environment(lcfirst(substr($parameter->getName(), 3))), ...[...$previous, "$definition"]);
                     continue;
                 }

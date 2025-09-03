@@ -46,10 +46,10 @@ final class Build implements Command
         foreach ($classes as $class => $path) {
             try {
                 if (!isset($this->reflectedClasses[$class])) {
-                    $reflection = new ReflectionClass($class);
-                    foreach($reflection->getAttributes(DependencyInjectionEntrypoint::class) as $attribute) {
+                    //$reflection = new ReflectionClass($class);
+                    //foreach($reflection->getAttributes(DependencyInjectionEntrypoint::class) as $attribute) {
                         $this->buildDependencyDefinition($class);
-                    }
+                    //}
                 }
             } catch (Exception $e) {
                 $this->output->errorLine($e->getMessage());
@@ -96,7 +96,7 @@ final class Build implements Command
                 $type = $parameter->getType();
                 if ($type instanceof ReflectionNamedType) {
                     if ($type->isBuiltin()) {
-                        if (str_starts_with($parameter->getName(), 'env') && $type->getName() === 'string') {
+                        if (str_starts_with($parameter->getName(), 'env') && strtoupper($parameter->getName()[3]) === $parameter->getName()[3] && $type->getName() === 'string') {
                             $key = lcfirst(substr($parameter->getName(), 3));
                             $this->data['environment'][$key] = new Environment($key);
                             $arguments[] = $this->data['environment'][$key];
@@ -123,15 +123,13 @@ final class Build implements Command
                         }
                         throw new DependencyUnresolvable("Can't find a value to use for {$parameter->getName()} of {$class}.");
                     }
-                    $arguments[] = $this->buildDependencyDefinition($class, ...[...$previous, $class]);
+                    $arguments[] = $this->buildDependencyDefinition($type->getName(), ...[...$previous, $class]);
                     continue;
                 }
                 throw new DependencyUnresolvable($class);
             }
-            $this->data['constructors'][$class] = $arguments;
-            return new ClassObject($class, $isLazy);
         }
-        $this->data['constructors'][$class] = [];
+        $this->data['constructors'][$class] = $arguments;
         return new ClassObject($class, $isLazy);
     }
 }
