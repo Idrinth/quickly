@@ -4,7 +4,6 @@ namespace Idrinth\Quickly\DependencyInjection;
 
 use DateTime;
 use Idrinth\Quickly\DependencyInjection\Definitions\ClassObject;
-use Idrinth\Quickly\DependencyInjection\Definitions\Environment;
 use Idrinth\Quickly\Example1;
 use Idrinth\Quickly\Example10;
 use Idrinth\Quickly\Example11;
@@ -100,6 +99,17 @@ class ContainerTest extends TestCase
         self::assertInstanceOf(Example1::class, $example1);
         self::assertInstanceOf(DateTime::class, $example1->date);
         self::assertEquals(0, $example1->time);
+    }
+    #[Test]
+    public function canNotBuildExample15WithDependenciesByChoosingAliasFirst(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], constructors: [
+            'ClassObject:'.Example15::class => [new Definitions\Factory(Example3Interface::class, 'eee', 'sdsd', Example15::class)],
+        ], classAliases: [
+            Example3Interface::class => Example3::class,
+        ]);
+        self::assertFalse($container->has(Example15::class));
+        self::assertInstanceOf(Example15::class, $container->get(Example15::class));
     }
     #[Test]
     public function canBuildExample2WithDependencies(): void

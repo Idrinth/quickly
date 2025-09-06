@@ -92,10 +92,10 @@ final class Container implements ContainerInterface
     private function toDefinition(string $id): Definition
     {
         if (isset($this->classAliases[$id])) {
-            return $this->definitions[$id] = $this->toDefinition('ClassObject:'.$this->classAliases[$id]);
+            return $this->definitions[$id] = $this->toDefinition($this->classAliases[$id]);
         }
         if (!str_contains($id, ':')) {
-            return new ClassObject($id);
+            return $this->definitions['ClassObject:'.$id] ?? new ClassObject($id);
         }
         if (isset($this->definitions[$id])) {
             return $this->definitions[$id];
@@ -190,6 +190,9 @@ final class Container implements ContainerInterface
         }
         if (in_array("$definition", $previous)) {
             throw new CircularDependency(implode('->', $previous).'->'.$definition);
+        }
+        if (isset($this->classAliases['Alias:'.$definition->getId()])) {
+            return $this->resolve($this->toDefinition($this->classAliases['Alias:'.$definition->getId()]), ...$previous);
         }
         if ($definition->getType() === DefinitionTypes::Environment) {
             return $this->environments["$definition"]
