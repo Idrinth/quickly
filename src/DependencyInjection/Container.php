@@ -192,7 +192,7 @@ final class Container implements ContainerInterface
             throw new CircularDependency(implode('->', $previous).'->'.$definition);
         }
         if (isset($this->classAliases['Alias:'.$definition->getId()])) {
-            return $this->resolve($this->toDefinition($this->classAliases['Alias:'.$definition->getId()]), ...$previous);
+            return $this->objects["$definition"] = $this->resolve($this->toDefinition($this->classAliases['Alias:'.$definition->getId()]), ...$previous);
         }
         if ($definition->getType() === DefinitionTypes::Environment) {
             return $this->environments["$definition"]
