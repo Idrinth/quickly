@@ -94,7 +94,7 @@ final class Container implements ContainerInterface
         if (isset($this->classAliases[$id])) {
             return $this->definitions[$id] = $this->toDefinition('ClassObject:'.$this->classAliases[$id]);
         }
-        if (str_contains($id, ':')) {
+        if (!str_contains($id, ':')) {
             return new ClassObject($id);
         }
         if (isset($this->definitions[$id])) {
