@@ -7,7 +7,7 @@ use Idrinth\Quickly\DependencyInjection\DefinitionTypes;
 
 final readonly class ClassObject implements Definition
 {
-    public function __construct(private string $id, private bool $isLazy = false)
+    public function __construct(private string $id, private bool $isLazy = false, private bool $isNotUnique = false)
     {
     }
     public function getType(): DefinitionTypes
@@ -27,5 +27,10 @@ final readonly class ClassObject implements Definition
     public function isLazy(): bool
     {
         return $this->isLazy;
+    }
+
+    public function isNotUnique(): bool
+    {
+        return $this->isNotUnique;
     }
 }

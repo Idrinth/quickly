@@ -18,13 +18,10 @@ use ReflectionClass;
 use ReflectionException;
 use ReflectionNamedType;
 use ReflectionParameter;
+use Throwable;
 
 final class Build implements Command
 {
-    /**
-     * @var ReflectionClass[]
-     */
-    private array $reflectedClasses;
     private array $data = [
         'classAliases' => [],
         'factories' => [],
@@ -32,7 +29,6 @@ final class Build implements Command
     ];
     public function __construct(private CommandLineOutput $output)
     {
-        $this->reflectedClasses = [];
     }
     public function run(): int
     {
@@ -43,14 +39,50 @@ final class Build implements Command
             'staticValues' => [],
         ];
         $classes = require (__DIR__ . '/../../vendor/composer/autoload_classmap.php');
+        $interfaces = [];
         foreach ($classes as $class => $path) {
+            if ($class instanceof Throwable) {
+                continue;
+            }
             try {
-                if (!isset($this->reflectedClasses[$class])) {
-                    //$reflection = new ReflectionClass($class);
-                    //foreach($reflection->getAttributes(DependencyInjectionEntrypoint::class) as $attribute) {
-                        $this->buildDependencyDefinition($class);
-                    //}
+                $reflection = new ReflectionClass($class);
+                if (!$reflection->isAbstract() && !$reflection->isInterface() && !$reflection->isTrait()) {
+                    foreach ($reflection->getInterfaces() as $interface) {
+                        $interfaces[$interface->getName()] = $interfaces[$interface->getName()] ?? [];
+                        $interfaces[$interface->getName()][] = $class;
+                    }
+                    $parent = $reflection->getParentClass();
+                    while ($parent) {
+                        foreach ($parent->getInterfaces() as $interface) {
+                            $interfaces[$interface->getName()] = $interfaces[$interface->getName()] ?? [];
+                            $interfaces[$interface->getName()][] = $class;
+                        }
+                        if ($parent->isAbstract()) {
+                            $interfaces[$parent->getName()] = $interfaces[$parent->getName()] ?? [];
+                            $interfaces[$parent->getName()][] = $class;
+                        }
+                        $parent = $parent->getParentClass();
+                    }
                 }
+            } catch (Exception $e) {
+                $this->output->errorLine($e->getMessage());
+            }
+        }
+        foreach ($interfaces as $interface => $implementations) {
+            $implementations = array_unique($implementations);
+            if (count($implementations) === 1) {
+                $this->data['classAliases'][$interface] = $implementations[0];
+            }
+        }
+        foreach ($classes as $class => $path) {
+            if ($class instanceof Throwable) {
+                continue;
+            }
+            try {
+                //$reflection = new ReflectionClass($class);
+                //foreach($reflection->getAttributes(DependencyInjectionEntrypoint::class) as $attribute) {
+                $this->buildDependencyDefinition($class);
+                //}
             } catch (Exception $e) {
                 $this->output->errorLine($e->getMessage());
             }
@@ -75,7 +107,7 @@ final class Build implements Command
         }
         $this->output->infoLine("Reflecting on $class");
         $reflection = new ReflectionClass($class);
-        if ($reflection->isInterface()) {
+        if ($reflection->isInterface() || $reflection->isAbstract()) {
             if (!isset($this->data['classAliases'][$reflection->getName()])) {
                 throw new DependencyUnresolvable("Interface $class has no alias attached.");
             }
@@ -122,6 +154,20 @@ final class Build implements Command
                             continue;
                         }
                         throw new DependencyUnresolvable("Can't find a value to use for {$parameter->getName()} of {$class}.");
+                    }
+                    if ($type->getName() instanceof Throwable) {
+                        if ($parameter->isDefaultValueAvailable()) {
+                            $default = $parameter->getDefaultValue();
+                            $this->data['staticValues'][serialize($default)] = $this->data['staticValues'][serialize($default)] ?? new StaticValue($default);
+                            $arguments[] = $this->data['staticValues'][serialize($default)];
+                            continue;
+                        }
+                        if ($parameter->allowsNull()) {
+                            $this->data['staticValues'][serialize(null)] = $this->data['staticValues'][serialize(null)] ?? new StaticValue(null);
+                            $arguments[] = $this->data['staticValues'][serialize(null)];
+                            continue;
+                        }
+                        throw new DependencyUnresolvable("Can't resolve Throwable at build time for {$parameter->getName()} of {$class}.");
                     }
                     $arguments[] = $this->buildDependencyDefinition($type->getName(), ...[...$previous, $class]);
                     continue;

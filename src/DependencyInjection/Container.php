@@ -185,15 +185,15 @@ final class Container implements ContainerInterface
     }
     private function resolve(Definition $definition, string ...$previous): object|string
     {
+        if (isset($this->objects["$definition"])) {
+            return $this->objects["$definition"];
+        }
         if (in_array("$definition", $previous)) {
             throw new CircularDependency(implode('->', $previous).'->'.$definition);
         }
         if ($definition->getType() === DefinitionTypes::Environment) {
             return $this->environments["$definition"]
                 ?? throw new DependencyNotFound("Environment {$definition->getId()} could not be found");
-        }
-        if (isset($this->objects["$definition"])) {
-            return $this->objects["$definition"];
         }
         if ($definition->getType() === DefinitionTypes::Factory) {
             /**
