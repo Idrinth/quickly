@@ -36,7 +36,8 @@ final class Build implements Command
             'constructors' => [],
             'staticValues' => [],
         ];
-        $classes = require (__DIR__ . '/../../vendor/composer/autoload_classmap.php');
+        $folder = is_dir(__DIR__ . '/../../vendor') ? __DIR__ . '/../../vendor' : __DIR__ . '/../../../../';
+        $classes = require ($folder . 'composer/autoload_classmap.php');
         $interfaces = [];
         foreach ($classes as $class => $path) {
             if ($class instanceof Throwable) {
@@ -85,10 +86,10 @@ final class Build implements Command
                 $this->output->errorLine($e->getMessage());
             }
         }
-        if (!is_dir(__DIR__ . '/../../.quickly')) {
-            mkdir(__DIR__ . '/../../.quickly', 0755, true);
+        if (!is_dir($folder . '../.quickly')) {
+            mkdir($folder . '../.quickly', 0755, true);
         }
-        file_put_contents(__DIR__ . '/../../.quickly/generated.php', '<?php return '.var_export($this->data, true).';');
+        file_put_contents($folder . '../.quickly/generated.php', '<?php return '.var_export($this->data, true).';');
         $definitions = [];
         $cases = [];
         foreach ($this->data['classAliases'] as $alias => $class) {
@@ -109,7 +110,7 @@ final class Build implements Command
             $definitions[] = "'$class'=>true";
         }
         file_put_contents(
-            __DIR__ . '/../../.quickly/Container.php',
+            $folder . '../.quickly/Container.php',
             str_replace(
                 [
                     '//Cases',
