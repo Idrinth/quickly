@@ -14,4 +14,4 @@ $command = match ($argv[1] ?? null) {
     'validate' => new Validate($output),
     default => new Help($output),
 };
-exit($command->run());
+exit($command->run($argv[2] ?? null));

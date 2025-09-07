@@ -48,7 +48,7 @@ final class Container implements ContainerInterface
      * @param Array<string, string> $factories
      * @param Array<string, string> $classAliases
      */
-    public function __construct(array $environments, array $constructors = [], array $factories = [], array $classAliases = [])
+    public function __construct(array $environments, private readonly ContainerInterface $fallbackContainer, array $constructors = [], array $factories = [], array $classAliases = [])
     {
         $this->definitions = [];
         $this->environments = [];
@@ -196,7 +196,11 @@ final class Container implements ContainerInterface
         try {
             return $this->objects["$definition"] = new $class(...$arguments);
         } catch (Exception $e) {
-            throw new DependencyUnbuildable("$class couldn't be build", previous: $e);
+            try {
+                return $this->fallbackContainer->get($class);
+            } catch (Exception $e2) {
+                throw new FallbackFailed("$class couldn't be build: $e2", previous: $e);
+            }
         }
     }
     private function resolve(Definition $definition, string ...$previous): object|string
@@ -250,7 +254,11 @@ final class Container implements ContainerInterface
                 )
             );
         } catch (Exception $e) {
-            throw new DependencyUnbuildable("$class can't be built.", previous: $e);
+            try {
+                return $this->fallbackContainer->get($class);
+            } catch (Exception $e2) {
+                throw new FallbackFailed("$class couldn't be build: $e2", previous: $e);
+            }
         }
     }
     /**

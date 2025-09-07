@@ -10,13 +10,12 @@ final readonly class Help implements Command
     public function __construct(private CommandLineOutput $output)
     {
     }
-    public function run(): int
+    public function run(?string $path): int
     {
         $this->output->infoLine("Welcome to Quickly!");
         $this->output->infoLine("");
-        $this->output->infoLine("vendor/bin/quickly build [filepath]    ->\n  creates a production configuration file.");
-        $this->output->infoLine("vendor/bin/quickly init [filepath]     ->\n  creates a development configuration file.");
-        $this->output->infoLine("vendor/bin/quickly validate [filepath] ->\n  validates the configuration file.");
+        $this->output->infoLine("vendor/bin/quickly build [filepath]    ->\n  creates a production configuration file.\n  Make sure you use the compiled Container if possible for best performance.");
+        $this->output->infoLine("vendor/bin/quickly validate [filepath] ->\n  validates the production configuration file.\n  Intended for usages as one of the health-checks.");
         $this->output->infoLine("");
         return 0;
     }

@@ -10,8 +10,9 @@ final readonly class Validate implements Command
     public function __construct(private CommandLineOutput $output)
     {
     }
-    public function run(): int
+    public function run(?string $path): int
     {
+        $folder = $path ?? is_dir(__DIR__ . '/../../vendor') ? __DIR__ . '/../../vendor/' : __DIR__ . '/../../../../';
         return 0;
     }
 }

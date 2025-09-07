@@ -12,6 +12,7 @@ A fast dependency injection container for PHP featuring build-time resolution an
 - 💤 **Lazy Initialization** - Defer object creation until needed
 - 🔄 **Circular Dependency Detection** - Prevents infinite dependency loops
 - 📋 **Validation Tools** - Command-line tools for configuration validation
+- 🔗 **Expandable** -a fallback container to the container handles cases not covered by it
 
 ## Requirements
 

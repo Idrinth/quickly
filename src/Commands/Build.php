@@ -25,19 +25,25 @@ use Throwable;
 final class Build implements Command
 {
     private array $data;
+    private array $mappedEnvironments;
+    private array $usedInterfaces;
     public function __construct(private CommandLineOutput $output)
     {
     }
-    public function run(): int
+    public function run(?string $path): int
     {
+        $this->mappedEnvironments = [];
+        $this->usedInterfaces = [];
         $this->data = [
             'classAliases' => [],
             'factories' => [],
             'constructors' => [],
+            'environments' => [],
             'staticValues' => [],
         ];
-        $folder = is_dir(__DIR__ . '/../../vendor') ? __DIR__ . '/../../vendor' : __DIR__ . '/../../../../';
+        $folder = $path ?? is_dir(__DIR__ . '/../../vendor') ? __DIR__ . '/../../vendor/' : __DIR__ . '/../../../../';
         $classes = require ($folder . 'composer/autoload_classmap.php');
+        $entrypoints = include($folder . '../.quickly/entrypoints.php') ?? [];
         $interfaces = [];
         foreach ($classes as $class => $path) {
             if ($class instanceof Throwable) {
@@ -78,10 +84,14 @@ final class Build implements Command
                 continue;
             }
             try {
-                //$reflection = new ReflectionClass($class);
-                //foreach($reflection->getAttributes(DependencyInjectionEntrypoint::class) as $attribute) {
-                $this->buildDependencyDefinition($class);
-                //}
+                if (in_array($class, $entrypoints, true)) {
+                    $this->buildDependencyDefinition($class);
+                    continue;
+                }
+                $reflection = new ReflectionClass($class);
+                foreach($reflection->getAttributes(DependencyInjectionEntrypoint::class) as $attribute) {
+                    $this->buildDependencyDefinition($class);
+                }
             } catch (Exception $e) {
                 $this->output->errorLine($e->getMessage());
             }
@@ -93,14 +103,16 @@ final class Build implements Command
         $definitions = [];
         $cases = [];
         foreach ($this->data['classAliases'] as $alias => $class) {
-            $cases[] = "'$alias'=>\$this->get('$class')";
-            $definitions[] = "'$alias'=>true";
+            if (isset($this->usedInterfaces[$alias])) {
+                $cases[] = "'$alias'=>\$this->get('$class')";
+                $definitions[] = "'$alias'=>true";
+            }
         }
         foreach ($this->data['constructors'] as $class => $constructor) {
             $params = [];
             foreach ($constructor as $param) {
                 $params[] = match(get_class($param)) {
-                    Environment::class => "\$this->get('Environment:{$param->getId()}')",
+                    Environment::class => "\$this->environment['{$param->getId()}'] ?? throw new \\Idrinth\\Quickly\\DependencyInjection\\DependencyNotFound()",
                     StaticValue::class => var_export($param->getValue(), true),
                     Factory::class => "\$this->get(\$this->get('Factory:{$param->getId()}')->pickImplementation('{$param->getParameter()}','{$param->getKey()}','{$param->getForClass()}'))",
                     default => "\$this->get('{$param->getId()}')",
@@ -115,12 +127,14 @@ final class Build implements Command
                 [
                     '//Cases',
                     '//Definitions',
-                    'namespace Idrinth\\Quickly\\Commands\\Build;'
+                    'namespace Idrinth\\Quickly\\Commands\\Build;',
+                    '$envToInject=[]',
                 ],
                 [
                     implode(",\n", $cases),
                     implode(",\n", $definitions),
-                    'namespace Idrinth\\Quickly\\Built\\DependendyInjection;'
+                    'namespace Idrinth\\Quickly\\Built\\DependendyInjection;',
+                    var_export($this->mappedEnvironments, true),
                 ],
                 file_get_contents(__DIR__ . '/Build/Container.php')
             )
@@ -151,6 +165,7 @@ final class Build implements Command
             if (!isset($this->data['classAliases'][$reflection->getName()])) {
                 throw new DependencyUnresolvable("Interface $class has no alias attached.");
             }
+            $this->usedInterfaces[$class] = true;
             return $this->buildDependencyDefinition($this->data['classAliases'][$reflection->getName()], ...$previous);
         }
         $isLazy = !empty($reflection->getAttributes(LazyInitialization::class));
@@ -179,6 +194,15 @@ final class Build implements Command
                         }
                         if (str_starts_with($parameter->getName(), 'env') && strtoupper($parameter->getName()[3]) === $parameter->getName()[3] && $type->getName() === 'string') {
                             $key = lcfirst(substr($parameter->getName(), 3));
+                            $parts = explode('', $key);
+                            $original = '';
+                            foreach ($parts as $part) {
+                                if (in_array($part, range('A', 'Z'))) {
+                                    $original .= '_';
+                                }
+                                $original .= strtoupper($part);
+                            }
+                            $this->mappedEnvironments[$key] = $original;
                             $this->data['environment'][$key] = new Environment($key);
                             $arguments[] = $this->data['environment'][$key];
                             continue;
@@ -186,6 +210,7 @@ final class Build implements Command
                         if ($type->getName() === 'string') {
                             foreach ($parameter->getAttributes(EnvironmentInject::class) as $attribute) {
                                 $key = lcfirst(str_replace('_', '', ucwords(strtolower($attribute->newInstance()->environmentName), '_')));
+                                $this->mappedEnvironments[$key] = $attribute->newInstance()->environmentName;
                                 $this->data['environment'][$key] = new Environment($key);
                                 $arguments[] = $this->data['environment'][$key];
                                 continue 2;

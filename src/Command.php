@@ -4,5 +4,5 @@ namespace Idrinth\Quickly;
 
 interface Command
 {
-    public function run(): int;
+    public function run(?string $path): int;
 }
