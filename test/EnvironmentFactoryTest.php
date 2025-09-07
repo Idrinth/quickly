@@ -26,7 +26,7 @@ class EnvironmentFactoryTest extends TestCase
     #[Test]
     public function createsDIContainerFromConfig(): void
     {
-        $factory = new EnvironmentFactory('/../fixtures/config.php');
+        $factory = new EnvironmentFactory(__DIR__ .'/../fixtures');
         $container = $factory->createContainer();
         $this->assertTrue($container->has('Alias:A'));
     }

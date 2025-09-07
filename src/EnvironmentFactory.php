@@ -10,7 +10,7 @@ final class EnvironmentFactory implements ContainerFactory
 {
     private ?ContainerInterface $container = null;
     public function __construct(
-        private readonly string $configPath = '/../../../../.quickly',
+        private readonly string $configPath = __DIR__.'/../../../../.quickly',
         private readonly ?ContainerInterface $fallbackContainer = null
     ) {
     }
@@ -31,12 +31,13 @@ final class EnvironmentFactory implements ContainerFactory
             }
         };
         if ((!isset($_ENV['DI_USE_REFLECTION']) || strtolower($_ENV['DI_USE_REFLECTION']) !== 'true') && isset($_ENV['DI_USE_CONFIG_VALIDATION']) && strtolower($_ENV['DI_USE_CONFIG_VALIDATION']) === 'false') {
-            include(__DIR__ . $this->configPath.'/Container.php');
+            include($this->configPath.'/Container.php');
             if (class_exists('Idrinth\\Quickly\\Built\\DependendyInjection\\Container')) {
                 return $this->container = new \Idrinth\Quickly\Built\DependendyInjection\Container($_ENV, $fallback);
             }
         }
-        $data = include(__DIR__ . $this->configPath.'/generated.php');
+        $data = include($this->configPath.'/generated.php');
+        var_dump($this->configPath.'/generated.php');
         if (is_array($data)) {
             return $this->container = new Container(
                 $_ENV,

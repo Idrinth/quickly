@@ -14,6 +14,6 @@ class BuildTest extends TestCase
     public function canRun(): void
     {
         $command = new Build($this->createMock(CommandLineOutput::class));
-        self::assertEquals(0, $command->run());
+        self::assertEquals(0, $command->run(null));
     }
 }

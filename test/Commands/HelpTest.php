@@ -14,9 +14,9 @@ class HelpTest extends TestCase
     public function canRun(): void
     {
         $output = $this->createMock(CommandLineOutput::class);
-        $output->expects(self::exactly(6))
+        $output->expects(self::exactly(5))
             ->method('infoLine');
         $command = new Help($output);
-        self::assertEquals(0, $command->run());
+        self::assertEquals(0, $command->run(null));
     }
 }
