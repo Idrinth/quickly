@@ -36,6 +36,10 @@ final class Container implements ContainerInterface
      * @var Array<string, string>
      */
     private array $classAliases;
+    /**
+     * @var Array<string, string[]>
+     */
+    private array $nameMap;
     private bool $useReflection;
 
     /**
@@ -67,6 +71,8 @@ final class Container implements ContainerInterface
                     }
                 }
             }
+            $this->nameMap['ClassObject:'.$className] = ['ClassObject', $className];
+            $this->nameMap[$className] = ['ClassObject', $className];
             $this->constructors['ClassObject:'.$className] = $dependencies;
         }
         $this->factories = $this->mapKeys('Factory', $factories, $disableValidation);
@@ -85,6 +91,8 @@ final class Container implements ContainerInterface
                 }
             }
             $newList[$prefix.':'.$className] = $targetName;
+            $this->nameMap[$className] = [$prefix, $targetName];
+            $this->nameMap[$prefix.':'.$className] = [$prefix, $targetName];
         }
         return $newList;
     }
@@ -92,20 +100,24 @@ final class Container implements ContainerInterface
     private function toDefinition(string $id): Definition
     {
         if (isset($this->classAliases[$id])) {
-            return $this->definitions[$id] = new ClassObject($this->classAliases[$id]);
+            $this->nameMap[$id] = ['ClassObject', $this->classAliases[$id]];
+            return $this->definitions['ClassObject:' . $id] = new ClassObject($this->classAliases[$id]);
         }
-        if (!str_contains($id, ':')) {
-            return $this->definitions['ClassObject:'.$id] ?? new ClassObject($id);
+        if (!isset($this->nameMap[$id])) {
+            if (!str_contains($id, ':')) {
+                $this->nameMap[$id] = ['ClassObject', $id];
+                return $this->definitions['ClassObject:' . $id] ?? new ClassObject($id);
+            }
+            $this->nameMap[$id] = explode(':', $id);
         }
         if (isset($this->definitions[$id])) {
             return $this->definitions[$id];
         }
-        $parts = explode(':', $id);
-        return $this->definitions[$id] = match ($parts[0]) {
-            'Environment' => new Environment($parts[1]),
-            'Factory' => new Definitions\Factory($parts[1], $parts[2], $parts[3], $parts[4]),
-            'ClassObject' => new ClassObject($parts[1]),
-            default => throw new DependencyTypeUnknown("Dependency definition type {$parts[0]} is unknown"),
+        return $this->definitions[$id] = match ($this->nameMap[$id][0]) {
+            'Environment' => new Environment($this->nameMap[$id][1]),
+            'Factory' => new Definitions\Factory($this->nameMap[$id][1], $this->nameMap[$id][2], $this->nameMap[$id][3], $this->nameMap[$id][4]),
+            'ClassObject' => new ClassObject($this->nameMap[$id][1]),
+            default => throw new DependencyTypeUnknown("Dependency definition type {$this->nameMap[$id][0]} is unknown"),
         };
     }
 
