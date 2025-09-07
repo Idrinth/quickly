@@ -6,7 +6,8 @@ use Psr\Container\ContainerInterface;
 
 final class Container implements ContainerInterface
 {
-    private array $defined;
+    private readonly array $defined;
+    private $built = [];
     public function __construct(private readonly ContainerInterface $fallbackContainer)
     {
         $this->defined = [
@@ -16,10 +17,10 @@ final class Container implements ContainerInterface
 
     public function get(string $id): string|object
     {
-        if (isset($this->defined[$id]) && $this->defined[$id] !== true) {
-            return $this->defined[$id];
+        if (isset($this->built[$id])) {
+            return $this->built[$id];
         }
-        return $this->defined[$id] = match ($id) {
+        return $this->build[$id] = match ($id) {
             //Cases,
             default => $this->fallbackContainer->get($id),
         };
