@@ -20,7 +20,7 @@ final class Container implements ContainerInterface
         if (isset($this->built[$id])) {
             return $this->built[$id];
         }
-        return $this->build[$id] = match ($id) {
+        return $this->built[$id] = match ($id) {
             //Cases,
             default => $this->fallbackContainer->get($id),
         };
