@@ -36,10 +36,6 @@ final readonly class ClassObject implements Definition
 
     public function __set_state(array $properties)
     {
-        foreach ($properties as $property => $value) {
-            if (property_exists($this, $property)) {
-                $this->$property = $value;
-            }
-        }
+        return new ClassObject($properties["id"], $properties["isLazy"], $properties["isNotUnique"]);
     }
 }

@@ -29,12 +29,8 @@ final readonly class Environment implements Definition
         return false;
     }
 
-    public function __set_state(array $properties)
+    public static function __set_state(array $properties)
     {
-        foreach ($properties as $property => $value) {
-            if (property_exists($this, $property)) {
-                $this->$property = $value;
-            }
-        }
+        return new Environment($properties["id"]);
     }
 }
