@@ -176,6 +176,73 @@ return [
 ];
 ```
 
+### Compiled Configuration
+
+About twice as fast as even the generated configuration, this is your best option in most cases.
+
+Have a look at [.quickly/entrypoints.php](.quickly/entrypoints.php) for configuring entry points without having to add any Attributes.
+
+```php
+<?php
+
+namespace Idrinth\Quickly\Built\DependendyInjection;
+
+use Exception;
+use Idrinth\Quickly\DependencyInjection\FallbackFailed;
+use Psr\Container\ContainerInterface;
+
+final class Container implements ContainerInterface
+{
+    private readonly array $defined;
+    private readonly array $environments;
+    private array $built = [];
+    public function __construct(array $environments, private readonly ContainerInterface $fallbackContainer)
+    {
+        foreach (array (
+) as $variableName => $environment) {
+            if (isset($environments[$environment])) {
+                $this->environments["Environment:$variableName"] = $environments[$environment];
+            }
+        }
+        $this->defined = [
+            'Idrinth\Quickly\CommandLineOutput'=>true,
+'Idrinth\Quickly\CommandLineOutputs\Colorless'=>true,
+'Idrinth\Quickly\Commands\Build'=>true,
+'Idrinth\Quickly\Commands\Help'=>true,
+'Idrinth\Quickly\Commands\Validate'=>true,
+        ];
+    }
+
+    public function get(string $id): string|object
+    {
+        if (isset($this->built[$id])) {
+            return $this->built[$id];
+        }
+        return $this->built[$id] = match ($id) {
+            'Idrinth\Quickly\CommandLineOutput'=>$this->get('Idrinth\Quickly\CommandLineOutputs\Colorless'),
+'Idrinth\Quickly\CommandLineOutputs\Colorless'=>new \Idrinth\Quickly\CommandLineOutputs\Colorless(),
+'Idrinth\Quickly\Commands\Build'=>new \Idrinth\Quickly\Commands\Build($this->get('Idrinth\Quickly\CommandLineOutputs\Colorless')),
+'Idrinth\Quickly\Commands\Help'=>new \Idrinth\Quickly\Commands\Help($this->get('Idrinth\Quickly\CommandLineOutputs\Colorless')),
+'Idrinth\Quickly\Commands\Validate'=>new \Idrinth\Quickly\Commands\Validate($this->get('Idrinth\Quickly\CommandLineOutputs\Colorless')),
+            default => $this->fallBackOn($id),
+        };
+    }
+    private function fallBackOn(string $id): object
+    {
+        try {
+            return $this->fallbackContainer->get($id);
+        } catch (Exception $e) {
+            throw new FallbackFailed("Couldn't fall back on {$id}", previous: $e);
+        }
+    }
+
+    public function has(string $id): bool
+    {
+        return isset($this->defined[$id]) || isset($this->environments[$id]) || $this->fallbackContainer->has($id);
+    }
+}
+```
+
 ## Environment Variable Mapping
 
 Environment variables are automatically converted to camelCase for injection:
@@ -186,13 +253,72 @@ Environment variables are automatically converted to camelCase for injection:
 
 ## Error Handling
 
-Quickly provides specific exceptions for different error scenarios:
+Quickly provides comprehensive exception handling with PSR-11 compliant exceptions for different error scenarios. All exceptions implement either `Psr\Container\ContainerExceptionInterface` or `Psr\Container\NotFoundExceptionInterface`.
 
-- `DependencyNotFound` - Service not registered
-- `DependencyUnbuildable` - Cannot construct service
-- `CircularDependency` - Circular dependency detected
-- `InvalidClassName` - Invalid class name provided
-- `NoImplementationFound` - Factory cannot resolve implementation
+### Configuration & Setup Errors
+
+- **`InvalidClassName`** - Invalid or empty class name provided in configuration
+    - Extends: `InvalidArgumentException`
+    - Implements: `Psr\Container\ContainerExceptionInterface`
+
+- **`InvalidDependency`** - Invalid dependency definition in constructor arguments
+    - Extends: `InvalidArgumentException`
+    - Implements: `Psr\Container\ContainerExceptionInterface`
+
+- **`DependencyTypeUnknown`** - Unknown dependency definition type encountered
+    - Extends: `InvalidArgumentException`
+    - Implements: `Psr\Container\ContainerExceptionInterface`
+
+### Resolution & Runtime Errors
+
+- **`DependencyNotFound`** - Service not registered in container
+    - Extends: `OutOfBoundsException`
+    - Implements: `Psr\Container\NotFoundExceptionInterface`
+
+- **`DependencyUnbuildable`** - Cannot construct service due to runtime issues
+    - Extends: `UnexpectedValueException`
+    - Implements: `Psr\Container\ContainerExceptionInterface`
+
+- **`CircularDependency`** - Circular dependency detected during resolution
+    - Extends: `DependencyUnbuildable`
+    - Implements: `Psr\Container\ContainerExceptionInterface` (inherited)
+
+- **`FallbackFailed`** - Fallback container failed to provide dependency
+    - Extends: `DependencyUnbuildable`
+    - Implements: `Psr\Container\ContainerExceptionInterface` (inherited)
+
+### Build-time Errors
+
+- **`DependencyUnresolvable`** - Dependency cannot be resolved at build time
+    - Extends: `DependencyUnbuildable`
+    - Implements: `Psr\Container\ContainerExceptionInterface` (inherited)
+
+### Factory-specific Errors
+
+- **`NoImplementationFound`** - Factory cannot resolve implementation for given parameters
+    - Extends: `UnexpectedValueException`
+    - Implements: `Psr\Container\NotFoundExceptionInterface`
+
+### Exception Hierarchy
+
+```
+InvalidArgumentException
+├── InvalidClassName
+├── InvalidDependency
+└── DependencyTypeUnknown
+
+OutOfBoundsException
+└── DependencyNotFound
+
+UnexpectedValueException
+├── DependencyUnbuildable
+│   ├── CircularDependency
+│   ├── DependencyUnresolvable
+│   └── FallbackFailed
+└── NoImplementationFound
+```
+
+All exceptions are PSR-11 compliant and provide detailed error messages to help with debugging dependency injection issues.
 
 ## Advanced Features
 
