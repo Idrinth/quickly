@@ -4,10 +4,10 @@ namespace Idrinth\Quickly\Commands\Build;
 
 use Psr\Container\ContainerInterface;
 
-final readonly class Container implements ContainerInterface
+final class Container implements ContainerInterface
 {
     private array $defined;
-    public function __construct(private ContainerInterface $fallbackContainer)
+    public function __construct(private readonly ContainerInterface $fallbackContainer)
     {
         $this->defined = [
             //Definitions,
@@ -16,7 +16,10 @@ final readonly class Container implements ContainerInterface
 
     public function get(string $id): string|object
     {
-        return match ($id) {
+        if (isset($this->defined[$id]) && $this->defined[$id] !== true) {
+            return $this->defined[$id];
+        }
+        return $this->defined[$id] = match ($id) {
             //Cases,
             default => $this->fallbackContainer->get($id),
         };
