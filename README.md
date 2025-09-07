@@ -1,5 +1,7 @@
 # Quickly
 
+[![Unittest](https://github.com/Idrinth/quickly/actions/workflows/php-unittest.yml/badge.svg)](https://github.com/Idrinth/quickly/actions/workflows/php-unittest.yml)
+
 A fast dependency injection container for PHP featuring build-time resolution and PSR-11 compliance.
 
 ## Features
