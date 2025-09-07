@@ -37,7 +37,6 @@ final class EnvironmentFactory implements ContainerFactory
             }
         }
         $data = include($this->configPath.'/generated.php');
-        var_dump($this->configPath.'/generated.php');
         if (is_array($data)) {
             return $this->container = new Container(
                 $_ENV,
