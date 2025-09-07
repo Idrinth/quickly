@@ -105,11 +105,11 @@ class ExpensiveService
 }
 ```
 
-## Command Line Tools (ALL WIP)
+## Command Line Tools
 
 Quickly provides several CLI commands accessible via `vendor/bin/quickly`:
 
-### Build Configuration
+### Build Configuration (Functional)
 
 ```bash
 vendor/bin/quickly build [filepath]
@@ -117,7 +117,7 @@ vendor/bin/quickly build [filepath]
 
 Creates an optimized production configuration file for maximum performance.
 
-### Validate Configuration
+### Validate Configuration (WIP)
 
 ```bash
 vendor/bin/quickly validate [filepath]
@@ -233,6 +233,10 @@ Or with PHPUnit directly:
 ```bash
 vendor/bin/phpunit
 ```
+
+### Benchmarks
+
+[Idrinth/php-dependency-injection-benchmark](https://github.com/Idrinth/php-dependency-injection-benchmark) contains up to date benchmarks with comparisons to competitors.
 
 ## Contributing
 
