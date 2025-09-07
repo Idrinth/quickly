@@ -4,3 +4,4 @@
 /*.phar
 /Dockerfile
 /.quickly/generated.php
+/.quickly/Container.php
