@@ -5,7 +5,7 @@ namespace Idrinth\Quickly\Commands;
 
 use Idrinth\Quickly\CommandLineOutputs\Colorless;
 
-require dirname(__DIR__) . '/vendor/autoload.php';
+require (is_dir(__DIR__ . '/../vendor') ? __DIR__ . '/../vendor' : __DIR__ . '/../../');
 
 $output = new Colorless();
 
