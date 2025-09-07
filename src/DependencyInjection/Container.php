@@ -92,7 +92,7 @@ final class Container implements ContainerInterface
     private function toDefinition(string $id): Definition
     {
         if (isset($this->classAliases[$id])) {
-            return $this->definitions[$id] = $this->toDefinition($this->classAliases[$id]);
+            return $this->definitions[$id] = new ClassObject($this->classAliases[$id]);
         }
         if (!str_contains($id, ':')) {
             return $this->definitions['ClassObject:'.$id] ?? new ClassObject($id);
@@ -245,6 +245,9 @@ final class Container implements ContainerInterface
      */
     public function get(string $id): object|string
     {
+        if (isset($this->objects["ClassObject:$id"])) {
+            return $this->objects["ClassObject:$id"];
+        }
         return $this->resolve($this->toDefinition($id));
     }
 
