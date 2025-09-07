@@ -55,6 +55,7 @@ final class Container implements ContainerInterface
         foreach ($environments as $environment => $value) {
             $key = lcfirst(str_replace('_', '', ucwords(strtolower($environment), '_')));
             $this->environments['Environment:' . $key] = $value;
+            $this->definitions['Environment:' . $key] = new Environment($key);
         }
         $this->useReflection = isset($environments['DI_USE_REFLECTION']) && strtolower($environments['DI_USE_REFLECTION']) === 'true';
         $disableValidation = isset($environments['DI_USE_CONFIG_VALIDATION']) && strtolower($environments['DI_USE_CONFIG_VALIDATION']) === 'false';
@@ -74,9 +75,16 @@ final class Container implements ContainerInterface
             $this->nameMap['ClassObject:'.$className] = ['ClassObject:'.$className, ['ClassObject', $className]];
             $this->nameMap[$className] = ['ClassObject:'.$className, ['ClassObject', $className]];
             $this->constructors['ClassObject:'.$className] = $dependencies;
+            $this->definitions['ClassObject:' . $className] = new ClassObject($className);
         }
         $this->factories = $this->mapKeys('Factory', $factories, $disableValidation);
+        foreach ($this->factories as $className) {
+            $this->definitions['ClassObject:' . $className] = new ClassObject($className);
+        }
         $this->classAliases = $this->mapKeys('Alias', $classAliases, $disableValidation);
+        foreach ($classAliases as $className) {
+            $this->definitions['ClassObject:' . $className] = new ClassObject($className);
+        }
     }
     private function mapKeys(string $prefix, array $list, bool $disableValidation): array
     {
