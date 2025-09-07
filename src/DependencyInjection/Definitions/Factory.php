@@ -44,4 +44,13 @@ final readonly class Factory implements Definition
     {
         return $this->isLazy;
     }
+
+    public function __set_state(array $properties)
+    {
+        foreach ($properties as $property => $value) {
+            if (property_exists($this, $property)) {
+                $this->$property = $value;
+            }
+        }
+    }
 }

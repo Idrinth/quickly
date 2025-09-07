@@ -35,4 +35,13 @@ final readonly class StaticValue implements Definition
     {
         return $this->value;
     }
+
+    public function __set_state(array $properties)
+    {
+        foreach ($properties as $property => $value) {
+            if (property_exists($this, $property)) {
+                $this->$property = $value;
+            }
+        }
+    }
 }

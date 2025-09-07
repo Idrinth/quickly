@@ -33,4 +33,13 @@ final readonly class ClassObject implements Definition
     {
         return $this->isNotUnique;
     }
+
+    public function __set_state(array $properties)
+    {
+        foreach ($properties as $property => $value) {
+            if (property_exists($this, $property)) {
+                $this->$property = $value;
+            }
+        }
+    }
 }
