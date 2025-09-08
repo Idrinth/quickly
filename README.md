@@ -147,14 +147,20 @@ use Idrinth\Quickly\DependencyInjection\Definitions\Environment;
 
 $container = new Container(
     environments: $_ENV,
+    overwrites: [
+        'SomeFullyQualifiedClassName' => [
+            'someArgumentName' => new Environment('configValue')
+        ],
+    ],
+    fallbackContainer: $somePSR11Container,
     constructors: [
         MyService::class => [
             new ClassObject(Dependency::class),
-            new Environment('CONFIG_VALUE')
-        ]
+            new Environment('configValue'),
+        ],
     ],
     classAliases: [
-        'MyInterface' => 'ConcreteImplementation'
+        'MyInterface' => 'ConcreteImplementation',
     ]
 );
 ```
@@ -260,6 +266,10 @@ Quickly provides comprehensive exception handling with PSR-11 compliant exceptio
 ### Configuration & Setup Errors
 
 - **`InvalidClassName`** - Invalid or empty class name provided in configuration
+    - Extends: `InvalidArgumentException`
+    - Implements: `Psr\Container\ContainerExceptionInterface`
+
+- **`InvalidParameterName`** - Invalid or empty parameter name provided in configuration
     - Extends: `InvalidArgumentException`
     - Implements: `Psr\Container\ContainerExceptionInterface`
 
