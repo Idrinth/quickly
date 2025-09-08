@@ -40,15 +40,21 @@ final class Container implements ContainerInterface
      * @var Array<string, string[]|string>
      */
     private array $nameMap;
+    /**
+     * @var Array<string, Array<string, Definition>>
+     */
+    private array $overwrites;
     private bool $useReflection;
 
     /**
      * @param Array<string, string> $environments
+     * @param Array<string, Array<string, Definition>> $overwrites
+     * @param ContainerInterface $fallbackContainer
      * @param Array<string, Definition> $constructors
      * @param Array<string, string> $factories
      * @param Array<string, string> $classAliases
      */
-    public function __construct(array $environments, private readonly ContainerInterface $fallbackContainer, array $constructors = [], array $factories = [], array $classAliases = [])
+    public function __construct(array $environments, array $overwrites, private readonly ContainerInterface $fallbackContainer, array $constructors = [], array $factories = [], array $classAliases = [])
     {
         $this->definitions = [];
         $this->environments = [];
@@ -85,6 +91,28 @@ final class Container implements ContainerInterface
         foreach ($classAliases as $className) {
             $this->definitions['ClassObject:' . $className] = new ClassObject($className);
         }
+        $this->overwrites = [];
+        foreach ($overwrites as $className => $parameters) {
+            if (!$disableValidation) {
+                if (!is_string($className) || empty($className)) {
+                    throw new InvalidClassName('Class name must be a string');
+                }
+            }
+            if (count($parameters) > 0) {
+                $overwrites[$className] = [];
+                foreach ($parameters as $parameterName => $parameter) {
+                    if (!$disableValidation) {
+                        if (!is_string($parameterName) || empty($parameterName)) {
+                            throw new InvalidPropertyName("Class name pf $className($parameter) must be a string");
+                        }
+                        if (!($parameter instanceof Definition)) {
+                            throw new InvalidDependency("Received an invalid dependency in the constructor argument of $className");
+                        }
+                    }
+                    $this->overwrites[$className][$parameterName] = $parameter;
+                }
+            }
+        }
     }
     private function mapKeys(string $prefix, array $list, bool $disableValidation): array
     {
@@ -118,7 +146,6 @@ final class Container implements ContainerInterface
             return $this->definitions[$this->nameMap[$id][0]];
         }
         return $this->definitions[$id] = match ($this->nameMap[$id][1][0]) {
-            'Environment' => new Environment($this->nameMap[$id][1][1]),
             'Factory' => new Definitions\Factory($this->nameMap[$id][1][1], $this->nameMap[$id][1][2], $this->nameMap[$id][1][3], $this->nameMap[$id][1][4]),
             'ClassObject' => isset($this->classAliases[$this->nameMap[$id][1][1]]) ? new ClassObject($this->classAliases[$this->nameMap[$id][1][1]]) : new ClassObject($this->nameMap[$id][1][1]),
             default => throw new DependencyTypeUnknown("Dependency definition type {$this->nameMap[$id][1][0]} is unknown"),
@@ -141,6 +168,10 @@ final class Container implements ContainerInterface
         }
         $arguments = [];
         foreach ($constructor->getParameters() as $parameter) {
+            if (isset($this->overwrites[$class][$parameter->getName()])) {
+                $arguments[] = $this->resolve($this->overwrites[$class][$parameter->getName()], ...$previous);
+                continue;
+            }
             $attributes = $parameter->getAttributes(ResolveWithFactory::class);
             foreach ($attributes as $attribute) {
                 $attribute = $attribute->newInstance();

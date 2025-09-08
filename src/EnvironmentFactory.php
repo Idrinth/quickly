@@ -36,16 +36,21 @@ final class EnvironmentFactory implements ContainerFactory
                 return $this->container = new \Idrinth\Quickly\Built\DependendyInjection\Container($_ENV, $fallback);
             }
         }
+        $overwrites = include($this->configPath.'/overwrites.php');
+        if (!is_array($overwrites)) {
+            $overwrites = [];
+        }
         $data = include($this->configPath.'/generated.php');
         if (is_array($data)) {
             return $this->container = new Container(
                 $_ENV,
+                $overwrites,
                 $fallback,
                 $data['constructors'] ?? [],
                 $data['factories'] ?? [],
                 $data['classAliases'] ?? [],
             );
         }
-        return $this->container = new Container($_ENV, $fallback);
+        return $this->container = new Container($_ENV, $overwrites, $fallback);
     }
 }

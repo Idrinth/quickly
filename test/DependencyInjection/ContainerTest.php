@@ -13,6 +13,7 @@ use Idrinth\Quickly\Example13;
 use Idrinth\Quickly\Example14;
 use Idrinth\Quickly\Example15;
 use Idrinth\Quickly\Example16;
+use Idrinth\Quickly\Example17;
 use Idrinth\Quickly\Example2;
 use Idrinth\Quickly\Example3;
 use Idrinth\Quickly\Example3Interface;
@@ -52,28 +53,28 @@ class ContainerTest extends TestCase
     #[Test]
     public function canGetEnvironmentVariables(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value'], [], $this->fallbackContainer);
         self::assertTrue($container->has('Environment:exAmple'));
         self::assertEquals('value', $container->get('Environment:exAmple'));
     }
     #[Test]
     public function canGetClass(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'True'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'True'], [], $this->fallbackContainer);
         self::assertFalse($container->has('ClassObject:stdClass'));
         self::assertInstanceOf(stdClass::class, $container->get('ClassObject:stdClass'));
     }
     #[Test]
     public function canGetClassWithOptionalDependencies(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'trUe'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'trUe'], [], $this->fallbackContainer);
         self::assertFalse($container->has('ClassObject:DateTime'));
         self::assertInstanceOf(DateTime::class, $container->get('ClassObject:DateTime'));
     }
     #[Test]
     public function getsTheSameObjectEveryTime(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'tRue'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'tRue'], [], $this->fallbackContainer);
         self::assertFalse($container->has('ClassObject:DateTime'));
         $datetime = $container->get('ClassObject:DateTime');
         self::assertInstanceOf(DateTime::class, $datetime);
@@ -82,7 +83,7 @@ class ContainerTest extends TestCase
     #[Test]
     public function failsToBuildUnknownObjects(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value'], [], $this->fallbackContainer);
         $this->expectException(DependencyNotFound::class);
         self::assertFalse($container->has('ClassObject:DateTime'));
         $container->get('ClassObject:DateTime');
@@ -90,7 +91,7 @@ class ContainerTest extends TestCase
     #[Test]
     public function failsToBuildNoneExistingClasses(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'truE'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'truE'], [], $this->fallbackContainer);
         $this->expectException(DependencyNotFound::class);
         self::assertFalse($container->has('ClassObject:DateTimeMutable'));
         $container->get('ClassObject:DateTimeMutable');
@@ -98,14 +99,14 @@ class ContainerTest extends TestCase
     #[Test]
     public function BuildsNoneExistingClassesWithAlias(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'truE'], $this->fallbackContainer, classAliases: ['DateTimeMutable' => DateTime::class]);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'truE'], [], $this->fallbackContainer, classAliases: ['DateTimeMutable' => DateTime::class]);
         self::assertTrue($container->has('Alias:DateTimeMutable'));
         self::assertInstanceOf(DateTime::class, $container->get('Alias:DateTimeMutable'));
     }
     #[Test]
     public function failsToBuildUnresolvableDependencies(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         $this->expectException(DependencyUnbuildable::class);
         self::assertFalse($container->has('ClassObject:PDO'));
         $container->get('ClassObject:PDO');
@@ -113,7 +114,7 @@ class ContainerTest extends TestCase
     #[Test]
     public function canBuildExample1WithDependencies(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         self::assertFalse($container->has('ClassObject:'.Example1::class));
         $example1 = $container->get('ClassObject:'.Example1::class);
         self::assertInstanceOf(Example1::class, $example1);
@@ -123,7 +124,7 @@ class ContainerTest extends TestCase
     #[Test]
     public function canNotBuildExample15WithDependenciesByChoosingAliasFirst(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer, constructors: [
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer, constructors: [
             'ClassObject:'.Example15::class => [new Definitions\Factory(Example3Interface::class, 'eee', 'sdsd', Example15::class)],
         ], classAliases: [
             Example3Interface::class => Example3::class,
@@ -134,7 +135,7 @@ class ContainerTest extends TestCase
     #[Test]
     public function canBuildExample2WithDependencies(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         self::assertFalse($container->has('ClassObject:'.Example2::class));
         $example2 = $container->get('ClassObject:'.Example2::class);
         self::assertInstanceOf(Example2::class, $example2);
@@ -145,7 +146,7 @@ class ContainerTest extends TestCase
     #[Test]
     public function canBuildExample3WithDependencies(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         self::assertFalse($container->has('ClassObject:'.Example3::class));
         $example3 = $container->get('ClassObject:'.Example3::class);
         self::assertInstanceOf(Example3::class, $example3);
@@ -154,7 +155,7 @@ class ContainerTest extends TestCase
     #[Test]
     public function canBuildExample5WithFactory(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer, constructors: [
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer, constructors: [
             Example5::class => [
                 new Definitions\Factory(Example4::class, 'example4', 'abc', Example5::class),
             ],
@@ -169,7 +170,7 @@ class ContainerTest extends TestCase
     #[Test]
     public function canNotBuildExample5WithNoneFactory(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer, constructors: [
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer, constructors: [
             Example5::class => [
                 new Definitions\Factory(Example1::class, 'example4', 'abc', Example5::class),
             ],
@@ -184,7 +185,7 @@ class ContainerTest extends TestCase
     public function canNotRegisterNonDefinition(): void
     {
         $this->expectException(InvalidDependency::class);
-        new Container([], $this->fallbackContainer, constructors: [
+        new Container([], [], $this->fallbackContainer, constructors: [
             Example5::class => [
                 new stdClass(),
             ],
@@ -194,7 +195,7 @@ class ContainerTest extends TestCase
     public function canNotRegisterNamelessClassAsConstructor(): void
     {
         $this->expectException(InvalidClassName::class);
-        new Container([], $this->fallbackContainer, constructors: [
+        new Container([], [], $this->fallbackContainer, constructors: [
             '' => [],
         ]);
     }
@@ -202,7 +203,7 @@ class ContainerTest extends TestCase
     public function canNotRegisterNamelessClassAsFactory(): void
     {
         $this->expectException(InvalidClassName::class);
-        new Container([], $this->fallbackContainer, factories: [
+        new Container([], [], $this->fallbackContainer, factories: [
             '' => 'B',
         ]);
     }
@@ -210,14 +211,14 @@ class ContainerTest extends TestCase
     public function canNotRegisterNamelessClassAsFactoryTarget(): void
     {
         $this->expectException(InvalidClassName::class);
-        new Container([], $this->fallbackContainer, factories: [
+        new Container([], [], $this->fallbackContainer, factories: [
             'A' => '',
         ]);
     }
     #[Test]
     public function canBuildExample3InterfaceWithAlias(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer, classAliases: [
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer, classAliases: [
             Example3Interface::class => Example3::class,
         ]);
         self::assertFalse($container->has('Alias:'.Example3::class));
@@ -228,7 +229,7 @@ class ContainerTest extends TestCase
     #[Test]
     public function canBuildExample6WithFactory(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         self::assertFalse($container->has('ClassObject:'.Example6::class));
         $example5 = $container->get('ClassObject:'.Example6::class);
         self::assertInstanceOf(Example6::class, $example5);
@@ -237,7 +238,7 @@ class ContainerTest extends TestCase
     #[Test]
     public function canNotBuildExample7WithMultipleOptions(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         self::assertFalse($container->has('ClassObject:'.Example7::class));
         $this->expectException(DependencyUnbuildable::class);
         $container->get('ClassObject:'.Example7::class);
@@ -245,14 +246,14 @@ class ContainerTest extends TestCase
     #[Test]
     public function canBuildExample8WithMultipleButNullableOptions(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         self::assertFalse($container->has('ClassObject:'.Example8::class));
         self::assertInstanceOf(Example8::class, $container->get('ClassObject:'.Example8::class));
     }
     #[Test]
     public function canNotInjectIntegersFromEnvironmentInExample9(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         self::assertFalse($container->has('ClassObject:'.Example9::class));
         $this->expectException(DependencyNotFound::class);
         $container->get('ClassObject:'.Example9::class);
@@ -260,42 +261,42 @@ class ContainerTest extends TestCase
     #[Test]
     public function canInjectStringFromEnvironmentInExample11(): void
     {
-        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         self::assertFalse($container->has('ClassObject:'.Example11::class));
         self::assertInstanceOf(Example11::class, $container->get('ClassObject:'.Example11::class));
     }
     #[Test]
     public function getUnknownIdThrowsDependencyNotFound(): void
     {
-        $container = new Container([], $this->fallbackContainer);
+        $container = new Container([], [], $this->fallbackContainer);
         $this->expectException(DependencyNotFound::class);
         $container->get('does-not-exist');
     }
     #[Test]
     public function getUnknownTypeThrowsDependencyTypeUnknown(): void
     {
-        $container = new Container([], $this->fallbackContainer);
+        $container = new Container([], [], $this->fallbackContainer);
         $this->expectException(DependencyTypeUnknown::class);
         $container->get('Type:does-not-exist');
     }
     #[Test]
     public function reflectionDisabledFallsBackToDefinitionsOnly(): void
     {
-        $container = new Container([], $this->fallbackContainer);
+        $container = new Container([], [], $this->fallbackContainer);
         $this->expectException(DependencyNotFound::class);
         $container->get('ClassObject:\\Some\\Class\\That\\Isnt\\Defined');
     }
     #[Test]
     public function exceptionsInConstructorAreWrapped(): void
     {
-        $container = new Container(['DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         $this->expectException(DependencyUnbuildable::class);
         $container->get('ClassObject:'.Example10::class);
     }
     #[Test]
     public function classesAreDefaultedTo(): void
     {
-        $container = new Container(['DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         self::assertFalse($container->has(Example1::class));
         self::assertInstanceOf(Example1::class, $container->get(Example1::class));
         self::assertTrue($container->has(Example1::class));
@@ -303,7 +304,7 @@ class ContainerTest extends TestCase
     #[Test]
     public function exceptionsAreWrappedInConfiguredMode(): void
     {
-        $container = new Container([], $this->fallbackContainer, constructors: [
+        $container = new Container([], [], $this->fallbackContainer, constructors: [
             Example12::class => [new ClassObject(Example1::class)],
             Example1::class => [new ClassObject(DateTime::class)],
             DateTime::class => [],
@@ -315,14 +316,14 @@ class ContainerTest extends TestCase
     #[Test]
     public function nullableIsUsedWhenNoValueIsAvailable(): void
     {
-        $container = new Container(['DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         self::assertFalse($container->has(Example13::class));
         self::assertInstanceOf(Example13::class, $container->get(Example13::class));
     }
     #[Test]
     public function resolvingLazyWorksEvenOutsideReflection(): void
     {
-        $container = new Container([], $this->fallbackContainer, constructors: [
+        $container = new Container([], [], $this->fallbackContainer, constructors: [
             Example14::class => [new ClassObject(Example10::class, true)],
             Example10::class => [],
         ]);
@@ -333,7 +334,7 @@ class ContainerTest extends TestCase
     #[Test]
     public function reflectionExceptionsAreCaughtAndWrapped(): void
     {
-        $container = new Container(['DI_USE_REFLECTION' => 'true', 'EX_AMPLE' => '---'], $this->fallbackContainer);
+        $container = new Container(['DI_USE_REFLECTION' => 'true', 'EX_AMPLE' => '---'], [], $this->fallbackContainer);
         self::assertInstanceOf(
             Example3::class,
             $container->get('Factory:'.Example4::class.':test:param:'.Example5::class)
@@ -342,8 +343,60 @@ class ContainerTest extends TestCase
     #[Test]
     public function circularDependenciesCantBeBuild(): void
     {
-        $container = new Container(['DI_USE_REFLECTION' => 'true'], $this->fallbackContainer);
+        $container = new Container(['DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         $this->expectException(CircularDependency::class);
         $container->get(Example16::class);
+    }
+    #[Test]
+    public function overwritesArePreferredOverGuessing(): void
+    {
+        $container = new Container(['DI_USE_REFLECTION' => 'true'], [
+            Example17::class => [
+                'someValue' => new ClassObject(Example1::class, true)
+            ],
+        ], $this->fallbackContainer);
+        self::assertInstanceOf(Example17::class, $container->get(Example17::class));
+    }
+    #[Test]
+    public function emptyParametersAreNotAllowedForOverwrites(): void
+    {
+        $this->expectException(InvalidPropertyName::class);
+        new Container(['DI_USE_REFLECTION' => 'true'], [
+            Example17::class => [
+                '' => new ClassObject(Example1::class, true)
+            ],
+        ], $this->fallbackContainer);
+    }
+    #[Test]
+    public function emptyClassesAreNotAllowedForOverwrites(): void
+    {
+        $this->expectException(InvalidClassName::class);
+        new Container(['DI_USE_REFLECTION' => 'true'], [
+            '' => [
+                'someValue' => new ClassObject(Example1::class, true)
+            ],
+        ], $this->fallbackContainer);
+    }
+    #[Test]
+    public function invalidDefinitionObjectsAreNotAllowedForOverwrites(): void
+    {
+        $this->expectException(InvalidDependency::class);
+        new Container(['DI_USE_REFLECTION' => 'true'], [
+            Example17::class => [
+                'someValue' => new stdClass()
+            ],
+        ], $this->fallbackContainer);
+    }
+    #[Test]
+    public function cachedInstancesAreReturnedOnSameIdGiven(): void
+    {
+        $container = new Container(['DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
+        self::assertSame($container->get(Example1::class), $container->get(Example1::class));
+    }
+    #[Test]
+    public function environmentsAreReturnedProperly(): void
+    {
+        $container = new Container(['DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
+        self::assertEquals('true', $container->get('Environment:diUseReflection'));
     }
 }

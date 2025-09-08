@@ -1,4 +1,5 @@
 <?php
+
 return [
     \Idrinth\Quickly\Commands\Build::class,
     \Idrinth\Quickly\Commands\Help::class,

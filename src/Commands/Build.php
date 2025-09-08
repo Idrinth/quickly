@@ -44,6 +44,7 @@ final class Build implements Command
         $folder = $path ?? is_dir(__DIR__ . '/../../vendor') ? __DIR__ . '/../../vendor/' : __DIR__ . '/../../../../';
         $classes = require ($folder . 'composer/autoload_classmap.php');
         $entrypoints = include($folder . '../.quickly/entrypoints.php') ?? [];
+        $overwrites = include($folder . '../.quickly/overwrites.php') ?? [];
         $interfaces = [];
         foreach ($classes as $class => $path) {
             if ($class instanceof Throwable) {
@@ -85,12 +86,12 @@ final class Build implements Command
             }
             try {
                 if (in_array($class, $entrypoints, true)) {
-                    $this->buildDependencyDefinition($class);
+                    $this->buildDependencyDefinition($class, $overwrites);
                     continue;
                 }
                 $reflection = new ReflectionClass($class);
                 foreach($reflection->getAttributes(DependencyInjectionEntrypoint::class) as $attribute) {
-                    $this->buildDependencyDefinition($class);
+                    $this->buildDependencyDefinition($class, $overwrites);
                 }
             } catch (Exception $e) {
                 $this->output->errorLine($e->getMessage());
@@ -144,11 +145,12 @@ final class Build implements Command
 
     /**
      * @param string $class
+     * @param Array<string, Array<string, Definition>> $overwrites
      * @param string ...$previous
      * @return Definition
      * @throws ReflectionException
      */
-    private function buildDependencyDefinition(string $class, string ...$previous): Definition
+    private function buildDependencyDefinition(string $class, array $overwrites, string ...$previous): Definition
     {
         if (in_array($class, $previous)) {
             throw new CircularDependency(implode('->', $previous).'->'.$class);
@@ -166,7 +168,7 @@ final class Build implements Command
                 throw new DependencyUnresolvable("Interface $class has no alias attached.");
             }
             $this->usedInterfaces[$class] = true;
-            return $this->buildDependencyDefinition($this->data['classAliases'][$reflection->getName()], ...$previous);
+            return $this->buildDependencyDefinition($this->data['classAliases'][$reflection->getName()], $overwrites, ...$previous);
         }
         $isLazy = !empty($reflection->getAttributes(LazyInitialization::class));
         if (isset($this->data['constructors'][$class])) {
@@ -179,13 +181,17 @@ final class Build implements Command
         }
         if (!$constructor->isPublic()) {
             if (isset($this->data['classAliases'][$class])) {
-                return $this->buildDependencyDefinition($this->data['classAliases'][$class], ...$previous);
+                return $this->buildDependencyDefinition($this->data['classAliases'][$class], $overwrites, ...$previous);
             }
             throw new DependencyUnbuildable("$class has no public constructor attached.");
         }
         $arguments = [];
         foreach ($constructor->getParameters() as $parameter) {
             if ($parameter instanceof ReflectionParameter) {
+                if (isset($overwrites[$class][$parameter->getName()])) {
+                    $arguments[] = $overwrites[$class][$parameter->getName()];
+                    continue;
+                }
                 $type = $parameter->getType();
                 if ($type instanceof ReflectionNamedType) {
                     if ($type->isBuiltin()) {
@@ -257,7 +263,7 @@ final class Build implements Command
                         }
                         throw new DependencyUnresolvable("Can't resolve Enum at build time for {$parameter->getName()} of {$class}.");
                     }
-                    $arguments[] = $this->buildDependencyDefinition($type->getName(), ...[...$previous, $class]);
+                    $arguments[] = $this->buildDependencyDefinition($type->getName(), $overwrites, ...[...$previous, $class]);
                     continue;
                 }
                 throw new DependencyUnresolvable($class);

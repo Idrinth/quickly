@@ -20,4 +20,16 @@ class ClassObjectTest extends TestCase
         self::assertFalse($classObject->isLazy());
         self::assertFalse($classObject->isNotUnique());
     }
+
+    #[Test]
+    public function canBuildViaFactory(): void
+    {
+        $classObject = ClassObject::__set_state(['id'=>'someIdHere', 'isLazy'=>false, 'isNotUnique'=>false]);
+        self::assertSame(DefinitionTypes::ClassObject, $classObject->getType());
+        self::assertSame('someIdHere', $classObject->getId());
+        self::assertSame('ClassObject:someIdHere', (string) $classObject);
+        self::assertFalse($classObject->isLazy());
+        self::assertFalse($classObject->isNotUnique());
+    }
+
 }

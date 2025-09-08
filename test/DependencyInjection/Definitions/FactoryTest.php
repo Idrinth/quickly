@@ -22,4 +22,23 @@ class FactoryTest extends TestCase
         self::assertSame('Factory:someIdHere:parameterName:key:className', (string) $factory);
         self::assertFalse($factory->isLazy());
     }
+
+    #[Test]
+    public function canBuildViaFactory(): void
+    {
+        $factory = Factory::__set_state([
+            'id'=>'someIdHere',
+            'parameter'=>'parameterName',
+            'key'=>'key',
+            'forClass'=>'className',
+            'isLazy'=>false,
+        ]);
+        self::assertSame(DefinitionTypes::Factory, $factory->getType());
+        self::assertSame('someIdHere', $factory->getId());
+        self::assertSame('parameterName', $factory->getParameter());
+        self::assertSame('key', $factory->getKey());
+        self::assertSame('className', $factory->getForClass());
+        self::assertSame('Factory:someIdHere:parameterName:key:className', (string) $factory);
+        self::assertFalse($factory->isLazy());
+    }
 }

@@ -19,4 +19,14 @@ class EnvironmentTest extends TestCase
         self::assertSame('Environment:someIdHere', (string) $environment);
         self::assertFalse($environment->isLazy());
     }
+
+    #[Test]
+    public function canBuildViaFactory(): void
+    {
+        $environment = Environment::__set_state(['id'=>'someIdHere', 'isLazy'=>false]);
+        self::assertSame(DefinitionTypes::Environment, $environment->getType());
+        self::assertSame('someIdHere', $environment->getId());
+        self::assertSame('Environment:someIdHere', (string) $environment);
+        self::assertFalse($environment->isLazy());
+    }
 }

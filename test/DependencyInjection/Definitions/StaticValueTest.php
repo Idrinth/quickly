@@ -22,4 +22,15 @@ class StaticValueTest extends TestCase
         self::assertFalse($staticValue->isLazy());
         self::assertFalse($staticValue->getValue());
     }
+
+    #[Test]
+    public function canBuildViaFactory(): void
+    {
+        $staticValue = StaticValue::__set_state(['value' => false, 'isLazy' => false]);
+        self::assertSame(DefinitionTypes::StaticValue, $staticValue->getType());
+        self::assertSame('', $staticValue->getId());
+        self::assertSame('StaticValue:b:0;', (string) $staticValue);
+        self::assertFalse($staticValue->isLazy());
+        self::assertFalse($staticValue->getValue());
+    }
 }
