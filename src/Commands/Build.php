@@ -45,6 +45,12 @@ final class Build implements Command
         $classes = require ($folder . 'composer/autoload_classmap.php');
         $entrypoints = include($folder . '../.quickly/entrypoints.php') ?? [];
         $overwrites = include($folder . '../.quickly/overwrites.php') ?? [];
+        if (!is_array($entrypoints)) {
+            $entrypoints = [];
+        }
+        if (!is_array($overwrites)) {
+            $overwrites = [];
+        }
         $interfaces = [];
         foreach ($classes as $class => $path) {
             if ($class instanceof Throwable) {
