@@ -108,6 +108,100 @@ class ExpensiveService
 }
 ```
 
+Looking at your overwrites implementation, here's what I would add to the README:
+
+## Overwrites
+
+Overwrites allow you to specify exact dependency resolutions for specific constructor parameters, bypassing automatic resolution logic. This is particularly useful for configuration-specific dependencies, testing scenarios, or when you need precise control over what gets injected.
+
+### Configuration File
+
+Create an overwrites configuration file at `.quickly/overwrites.php`:
+
+```php
+<?php
+
+use Idrinth\Quickly\DependencyInjection\Definitions\StaticValue;
+use Idrinth\Quickly\DependencyInjection\Definitions\Environment;
+use Idrinth\Quickly\DependencyInjection\Definitions\ClassObject;
+
+return [
+    // Override specific constructor parameters
+    'App\\Services\\DatabaseService' => [
+        'timeout' => new StaticValue(30),
+        'host' => new Environment('databaseHost'),
+    ],
+    
+    'App\\Services\\ApiClient' => [
+        'httpClient' => new ClassObject('App\\Http\\CustomHttpClient'),
+        'apiKey' => new Environment('apiKey'),
+    ],
+];
+```
+
+### Manual Configuration
+
+You can also specify overwrites directly when creating the container:
+
+```php
+use Idrinth\Quickly\DependencyInjection\Container;
+use Idrinth\Quickly\DependencyInjection\Definitions\Environment;
+use Idrinth\Quickly\DependencyInjection\Definitions\StaticValue;
+
+$container = new Container(
+    environments: $_ENV,
+    overwrites: [
+        'MyService' => [
+            'timeout' => new StaticValue(60),
+            'apiUrl' => new Environment('apiUrl'),
+        ],
+    ],
+    fallbackContainer: $fallback
+);
+```
+
+### Available Override Types
+
+- **StaticValue** - Inject a specific value (string, int, array, object, etc.)
+- **Environment** - Inject an environment variable
+- **ClassObject** - Inject a specific class instance
+- **Factory** - Use a factory to resolve the dependency
+
+### Examples
+
+```php
+// Static values
+'timeout' => new StaticValue(30),
+'isProduction' => new StaticValue(true),
+'config' => new StaticValue(['key' => 'value']),
+
+// Environment variables
+'databaseUrl' => new Environment('databaseUrl'),
+'apiKey' => new Environment('apiKey'),
+
+// Specific class implementations
+'logger' => new ClassObject('App\\Logging\\FileLogger'),
+'cache' => new ClassObject('App\\Cache\\RedisCache'),
+
+// Factory-based resolution
+'paymentProcessor' => new Factory(
+    'App\\Factories\\PaymentFactory', 
+    'stripe', 
+    'processor', 
+    'App\\Services\\OrderService'
+),
+```
+
+### Use Cases
+
+- **Configuration Management**: Override default values with environment-specific settings
+- **Testing**: Inject mock objects or test-specific values
+- **Feature Flags**: Conditionally inject different implementations
+- **Legacy Integration**: Specify exact dependencies for legacy code
+- **Performance Tuning**: Inject optimized implementations for specific parameters
+
+Overwrites take precedence over all other resolution methods, including reflection-based autowiring and factory resolution, giving you complete control over dependency injection for critical parameters.
+
 ## Command Line Tools
 
 Quickly provides several CLI commands accessible via `vendor/bin/quickly`:
