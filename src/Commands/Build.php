@@ -92,6 +92,13 @@ final class Build implements Command
             }
             try {
                 if (in_array($class, $entrypoints, true)) {
+                    if (isset($interfaces[$class])) {
+                        foreach ($interfaces[$class] as $implementation) {
+                            $this->usedInterfaces[$class] = $implementation;
+                            $this->buildDependencyDefinition($implementation, $overwrites);
+                        }
+                        continue;
+                    }
                     $this->buildDependencyDefinition($class, $overwrites);
                     continue;
                 }
