@@ -81,6 +81,7 @@ final class Build implements Command
             }
         }
         foreach ($interfaces as $interface => $implementations) {
+            $this->usedInterfaces[$interface] = true;
             $implementations = array_unique($implementations);
             if (count($implementations) === 1) {
                 $this->data['classAliases'][$interface] = $implementations[0];
