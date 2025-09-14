@@ -4,11 +4,15 @@ namespace Idrinth\Quickly\DependencyInjection;
 
 use Idrinth\Quickly\DependencyInjection\Definitions\ClassObject;
 use Idrinth\Quickly\DependencyInjection\Definitions\Environment;
+use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Exception;
+use Psr\Container\NotFoundExceptionInterface;
 use ReflectionClass;
 use ReflectionException;
+use ReflectionIntersectionType;
 use ReflectionNamedType;
+use ReflectionUnionType;
 
 final class Container implements ContainerInterface
 {
@@ -45,6 +49,10 @@ final class Container implements ContainerInterface
      */
     private array $overwrites;
     private bool $useReflection;
+    /**
+     * @var Array<string, ReflectionClass>
+     */
+    private array $reflectionClassMap = [];
 
     /**
      * @param Array<string, string> $environments
@@ -153,15 +161,27 @@ final class Container implements ContainerInterface
     }
 
     /**
+     * @throws ReflectionException
+     */
+    private function toReflectionClass(string $id): ReflectionClass
+    {
+        if (isset($this->reflectionClassMap[$id])) {
+            return $this->reflectionClassMap[$id];
+        }
+        return $this->reflectionClassMap[$id] = new ReflectionClass($id);
+    }
+    /**
      * @param Definition $definition
      * @param string[] $previous previous initialization attempts to detect loops
      * @return object
      * @throws ReflectionException
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     private function resolveWithReflection(Definition $definition, string ...$previous): object
     {
         $class = $definition->getId();
-        $reflection = new ReflectionClass($class);
+        $reflection = $this->toReflectionClass($class);
         $constructor = $reflection->getConstructor();
         if (!$constructor) {
             return $this->objects["$definition"] = new $class();
@@ -183,12 +203,54 @@ final class Container implements ContainerInterface
                 continue 2;
             }
             $type = $parameter->getType();
-            if (!($type instanceof ReflectionNamedType)) {
+            if ($type instanceof ReflectionUnionType) {
+                foreach ($type->getTypes() as $subtype) {
+                    if ($subtype instanceof ReflectionNamedType) {
+                        try {
+                            $arguments[] = $this->resolve($this->toDefinition($subtype->getName()), ...$previous);
+                            continue 2;
+                        } catch (DependencyUnresolvable $e) {
+                            //can be ignored here, this is just trying out all options
+                        }
+                    }
+                }
                 if ($parameter->isDefaultValueAvailable()) {
                     $arguments[] = $parameter->getDefaultValue();
                     continue;
                 }
-                throw new DependencyUnresolvable("Type of {$parameter->getName()} is not supported");
+                if ($parameter->allowsNull()) {
+                    $arguments[] = null;
+                    continue;
+                }
+                throw new DependencyUnresolvable("UnionType of {$parameter->getName()} is not supported");
+            }
+            if ($type instanceof ReflectionIntersectionType) {
+                foreach ($type->getTypes() as $subtype) {
+                    if ($subtype instanceof ReflectionNamedType) {
+                        try {
+                            $resolved = $this->resolve($this->toDefinition($subtype->getName()), ...$previous);
+                            foreach ($type->getTypes() as $subtype1) {
+                                if (!($subtype1 instanceof ReflectionNamedType) || !$this->toReflectionClass($subtype1->getName())->isInstance($resolved)) {
+                                    continue 2;
+                                }
+                            }
+                            continue 2;
+                        } catch (DependencyUnresolvable $e) {
+                            //can be ignored here, this is just trying out all options
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                if ($parameter->isDefaultValueAvailable()) {
+                    $arguments[] = $parameter->getDefaultValue();
+                    continue;
+                }
+                if ($parameter->allowsNull()) {
+                    $arguments[] = null;
+                    continue;
+                }
+                throw new DependencyUnresolvable("IntersectionType of {$parameter->getName()} is not supported");
             }
             if ($type->isBuiltin()) {
                 if ($type->getName() === 'string' && str_starts_with($parameter->getName(), 'env') && strtoupper($parameter->getName()[3]) === $parameter->getName()[3]) {
@@ -271,7 +333,7 @@ final class Container implements ContainerInterface
         }
         try {
             if ($definition->isLazy()) {
-                return $this->objects["$definition"] = new ReflectionClass($class)->newLazyGhost(fn() => new $class(
+                return $this->objects["$definition"] = $this->toReflectionClass($class)->newLazyGhost(fn() => new $class(
                     ...array_map(
                         fn(Definition $definition) => $this->resolve($definition, ...$previous),
                         $this->constructors["$definition"]

@@ -25,10 +25,32 @@ use Throwable;
 final class Build implements Command
 {
     private array $data;
+    /**
+     * @var Array<string, string>
+     */
     private array $mappedEnvironments;
+    /**
+     * @var Array<string, bool>
+     */
     private array $usedInterfaces;
+    /**
+     * @var Array<string, ReflectionClass>
+     */
+    private array $reflectionClassMap;
+
     public function __construct(private CommandLineOutput $output)
     {
+    }
+
+    /**
+     * @throws ReflectionException
+     */
+    private function toReflectionClass(string $id): ReflectionClass
+    {
+        if (isset($this->reflectionClassMap[$id])) {
+            return $this->reflectionClassMap[$id];
+        }
+        return $this->reflectionClassMap[$id] = new ReflectionClass($id);
     }
     public function run(?string $path): int
     {
@@ -57,7 +79,7 @@ final class Build implements Command
                 continue;
             }
             try {
-                $reflection = new ReflectionClass($class);
+                $reflection = $this->toReflectionClass($class);
                 if (!$reflection->isAbstract() && !$reflection->isInterface() && !$reflection->isTrait()) {
                     foreach ($reflection->getInterfaces() as $interface) {
                         $interfaces[$interface->getName()] = $interfaces[$interface->getName()] ?? [];
@@ -103,7 +125,7 @@ final class Build implements Command
                     $this->buildDependencyDefinition($class, $overwrites);
                     continue;
                 }
-                $reflection = new ReflectionClass($class);
+                $reflection = $this->toReflectionClass($class);
                 foreach($reflection->getAttributes(DependencyInjectionEntrypoint::class) as $attribute) {
                     $this->buildDependencyDefinition($class, $overwrites);
                 }
@@ -170,7 +192,7 @@ final class Build implements Command
             throw new CircularDependency(implode('->', $previous).'->'.$class);
         }
         $this->output->infoLine("Reflecting on $class");
-        $reflection = new ReflectionClass($class);
+        $reflection = $this->toReflectionClass($class);
         if ($reflection->isEnum()) {
             throw new DependencyUnbuildable("$class is an enum, skipping.");
         }
@@ -249,21 +271,7 @@ final class Build implements Command
                         }
                         throw new DependencyUnresolvable("Can't find a value to use for {$parameter->getName()} of {$class}.");
                     }
-                    if ($type->getName() instanceof Throwable) {
-                        if ($parameter->isDefaultValueAvailable()) {
-                            $default = $parameter->getDefaultValue();
-                            $this->data['staticValues'][serialize($default)] = $this->data['staticValues'][serialize($default)] ?? new StaticValue($default);
-                            $arguments[] = $this->data['staticValues'][serialize($default)];
-                            continue;
-                        }
-                        if ($parameter->allowsNull() || $type->allowsNull()) {
-                            $this->data['staticValues'][serialize(null)] = $this->data['staticValues'][serialize(null)] ?? new StaticValue(null);
-                            $arguments[] = $this->data['staticValues'][serialize(null)];
-                            continue;
-                        }
-                        throw new DependencyUnresolvable("Can't resolve Throwable at build time for {$parameter->getName()} of {$class}.");
-                    }
-                    if (new ReflectionClass($type->getName())->isEnum()) {
+                    if ($type->getName() instanceof Throwable || new ReflectionClass($type->getName())->isEnum()) {
                         if ($parameter->isDefaultValueAvailable()) {
                             $default = $parameter->getDefaultValue();
                             $this->data['staticValues'][serialize($default)] = $this->data['staticValues'][serialize($default)] ?? new StaticValue($default);

@@ -14,6 +14,7 @@ use Idrinth\Quickly\Example14;
 use Idrinth\Quickly\Example15;
 use Idrinth\Quickly\Example16;
 use Idrinth\Quickly\Example17;
+use Idrinth\Quickly\Example18;
 use Idrinth\Quickly\Example2;
 use Idrinth\Quickly\Example3;
 use Idrinth\Quickly\Example3Interface;
@@ -236,12 +237,19 @@ class ContainerTest extends TestCase
         self::assertInstanceOf(Example5::class, $example5->example5);
     }
     #[Test]
-    public function canNotBuildExample7WithMultipleOptions(): void
+    public function canBuildExample7WithMultipleOptions(): void
     {
         $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
         self::assertFalse($container->has('ClassObject:'.Example7::class));
-        $this->expectException(DependencyUnbuildable::class);
-        $container->get('ClassObject:'.Example7::class);
+        self::assertInstanceOf(Example7::class, $container->get('ClassObject:'.Example7::class));
+    }
+    #[Test]
+    public function canNotBuildExample18WithImpossibleUnionOptions(): void
+    {
+        $container = new Container(['EX_AMPLE' => 'value', 'DI_USE_REFLECTION' => 'true'], [], $this->fallbackContainer);
+        self::assertFalse($container->has('ClassObject:'.Example18::class));
+        $this->expectException(DependencyUnresolvable::class);
+        $container->get('ClassObject:'.Example18::class);
     }
     #[Test]
     public function canBuildExample8WithMultipleButNullableOptions(): void
